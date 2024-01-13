@@ -4,15 +4,14 @@
 AItem::AItem()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	ItemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ItemMeshComponent"));
+	RootComponent = ItemMesh;
 }
 
 void AItem::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//DRAW_SPHERE(GetActorLocation(), FColor::Blue)
-	//SHOW_NAME
-	//DRAW_VECTOR(GetActorLocation(), GetActorLocation() + GetActorForwardVector() * 100.f, FColor::Yellow)
 }
 
 float AItem::TransformedSin()
@@ -30,10 +29,6 @@ void AItem::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	RunningTime += DeltaTime;
-	//float DeltaZ = Amplitude * FMath::Sin(RunningTime * TimeConstant);
- 	//AddActorWorldOffset(FVector(0.f, 0.f, DeltaZ));
 
-	DRAW_SPHERE_SingleFrame(GetActorLocation(), FColor::Blue)
-	DRAW_VECTOR_SingleFrame(GetActorLocation(), GetActorLocation() + GetActorForwardVector() * 100.f, FColor::Red)
+	SetActorRotation(FRotator(0.f, RunningTime * 50.f, 0.f));
 }
-

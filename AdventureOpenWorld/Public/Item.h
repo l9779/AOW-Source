@@ -27,7 +27,20 @@ protected:
 	float TransformedSin();
 	UFUNCTION(BlueprintPure)
 	float TransformedCos();
+
+	template<typename T>
+	T Avg(T First, T Second);
+
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sine Parameters", meta = (AllowPrivateAccess = "true"))
 	float RunningTime = 0.f;
+
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* ItemMesh;
 };
+
+template<typename T>
+inline T AItem::Avg(T First, T Second)
+{
+	return (First + Second) / 2;
+}
