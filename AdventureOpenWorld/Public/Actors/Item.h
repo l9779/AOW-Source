@@ -11,7 +11,7 @@ class ADVENTUREOPENWORLD_API AItem : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
+public:
 	AItem();
 	virtual void Tick(float DeltaTime) override;
 

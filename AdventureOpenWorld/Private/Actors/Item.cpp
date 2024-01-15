@@ -1,5 +1,5 @@
-#include "Item.h"
-#include "AdventureOpenWorld/DebugMacros.h"
+// Fill out your copyright notice in the Description page of Project Settings.
+#include "Actors/Item.h"
 
 AItem::AItem()
 {
@@ -32,3 +32,4 @@ void AItem::Tick(float DeltaTime)
 
 	SetActorRotation(FRotator(0.f, RunningTime * 50.f, 0.f));
 }
+
