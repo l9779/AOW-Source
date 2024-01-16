@@ -2,6 +2,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
 
 ABird::ABird()
 {
@@ -36,8 +37,11 @@ void ABird::MoveForward(float AxisValue)
 	UE_LOG(LogTemp, Warning, TEXT("Value: %f"), AxisValue);
 }
 
-void ABird::Move(const FInputActionValue& value)
+void ABird::Move(const FInputActionValue& Value)
 {
+	const bool input = Value.Get<bool>();
+
+	if (input) UE_LOG(LogTemp, Warning, TEXT("Receiving input"));
 }
 
 void ABird::Tick(float DeltaTime)
@@ -50,7 +54,10 @@ void ABird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAxis(FName("MoveForward"), this, &ABird::MoveForward);
+	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) 
+	{
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABird::Move);
+	}
 
 }
 
