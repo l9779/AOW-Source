@@ -41,16 +41,22 @@ void ABird::BeginPlay()
 	}
 }
 
-void ABird::MoveForward(float AxisValue)
-{
-	if (GetController() && (AxisValue != 0.f)) AddMovementInput(GetActorForwardVector(), AxisValue);
-}
-
 void ABird::Move(const FInputActionValue& Value)
 {
 	const float DirectionValue = Value.Get<float>();
 
 	if (GetController() && (DirectionValue != 0.f)) AddMovementInput(GetActorForwardVector(), DirectionValue);
+}
+
+void ABird::Look(const FInputActionValue& Value)
+{
+	const FVector2D LookDirectionAxis = Value.Get<FVector2D>();
+
+	if (GetController())
+	{
+		AddControllerPitchInput(LookDirectionAxis.Y);
+		AddControllerYawInput(LookDirectionAxis.X);
+	}
 }
 
 void ABird::Tick(float DeltaTime)
@@ -63,11 +69,10 @@ void ABird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	//PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &ABird::MoveForward);
-
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) 
 	{
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABird::Move);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABird::Look);
 	}
 }
 
