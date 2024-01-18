@@ -11,6 +11,7 @@ class UInputMappingContext;
 class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
+class UGroomComponent;
 
 UCLASS()
 class ADVENTUREOPENWORLD_API ASlashCharacter : public ACharacter
@@ -41,4 +42,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* ViewCamera;
+
+	UPROPERTY(VisibleAnywhere, Category = "Hair Groom")
+	UGroomComponent* HeadHair;
+	UPROPERTY(VisibleAnywhere, Category = "Hair Groom")
+	UGroomComponent* EyebrownHair;
 };
