@@ -29,17 +29,20 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputMappingContext* SlashMappingContext;
+
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* MovementAction;
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* LookAroundAction;
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* JumpAction;
 
 	void Movement(const FInputActionValue& Value);
 	void LookAround(const FInputActionValue& Value);
+
 private:	
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* SpringArm;
-
 	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* ViewCamera;
 

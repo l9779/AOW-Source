@@ -61,6 +61,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	{
 		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Movement);
 		EnhancedInputComponent->BindAction(LookAroundAction, ETriggerEvent::Triggered, this, &ASlashCharacter::LookAround);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Jump);
 	}
 }
 
@@ -72,9 +73,9 @@ void ASlashCharacter::Movement(const FInputActionValue& Value)
 	{
 		const FRotationMatrix RotationMatrix = FRotationMatrix(FRotator(0.f, GetControlRotation().Yaw, 0.f));
 		
-		//ForwardDirection where the player is looking = RotationMatrix.GetUnitAxis(EAxis::X);
+		//Forward Vector where the player is looking in game world = RotationMatrix.GetUnitAxis(EAxis::X);
 		AddMovementInput(RotationMatrix.GetUnitAxis(EAxis::X), InputDirection.Y);
-		//RightDirection where the player is looking = RotationMatrix.GetUnitAxis(EAxis::Y);
+		//Right Vector from where the player is looking in game world = RotationMatrix.GetUnitAxis(EAxis::Y);
 		AddMovementInput(RotationMatrix.GetUnitAxis(EAxis::Y), InputDirection.X);
 	}
 }
