@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Item.generated.h"
 
+class USphereComponent;
+
 UCLASS()
 class ADVENTUREOPENWORLD_API AItem : public AActor
 {
@@ -31,12 +33,19 @@ protected:
 	template<typename T>
 	T Avg(T First, T Second);
 
+	// DECLARE_DYNAMIC_MULTICAST_SPARSE_DELEGATE_FiveParams no Components/PrimitiveComponent.h
+	UFUNCTION() // Callback for overlap event
+	void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sine Parameters", meta = (AllowPrivateAccess = "true"))
 	float RunningTime = 0.f;
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* ItemMesh;
+
+	UPROPERTY(VisibleAnywhere)
+	USphereComponent* Sphere;
 };
 
 template<typename T>
