@@ -16,8 +16,9 @@ void AItem::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Bind the callback to the delegate
+	// Bind the callbacks to the delegates
 	Sphere->OnComponentBeginOverlap.AddDynamic(this, &AItem::OnSphereOverlap);
+	Sphere->OnComponentEndOverlap.AddDynamic(this, &AItem::OnSphereEndOverlap);
 }
 
 float AItem::TransformedSin()
@@ -33,6 +34,11 @@ float AItem::TransformedCos()
 void AItem::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (GEngine) GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Cyan, OtherActor->GetName());
+}
+
+void AItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (GEngine) GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Cyan, FString("Ending Overlap with: ") + OtherActor->GetName());
 }
 
 void AItem::Tick(float DeltaTime)
