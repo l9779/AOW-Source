@@ -5,6 +5,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "GroomComponent.h"
+#include "Actors/Item.h"
+#include "Actors/Weapons/Weapon.h"
 
 ASlashCharacter::ASlashCharacter()
 {
@@ -62,6 +64,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Movement);
 		EnhancedInputComponent->BindAction(LookAroundAction, ETriggerEvent::Triggered, this, &ASlashCharacter::LookAround);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Jump);
+		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ASlashCharacter::EKeyPressed);
 	}
 }
 
@@ -89,4 +92,10 @@ void ASlashCharacter::LookAround(const FInputActionValue& Value)
 		AddControllerPitchInput(LookDirectionAxis.Y);
 		AddControllerYawInput(LookDirectionAxis.X);
 	}
+}
+
+void ASlashCharacter::EKeyPressed()
+{
+	if (AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem)) 
+		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"));
 }

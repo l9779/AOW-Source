@@ -12,6 +12,7 @@ class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
 class UGroomComponent;
+class AItem;
 
 UCLASS()
 class ADVENTUREOPENWORLD_API ASlashCharacter : public ACharacter
@@ -36,9 +37,12 @@ protected:
 	UInputAction* LookAroundAction;
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* JumpAction;
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* EquipAction;
 
 	void Movement(const FInputActionValue& Value);
 	void LookAround(const FInputActionValue& Value);
+	void EKeyPressed();
 
 private:	
 	UPROPERTY(VisibleAnywhere)
@@ -50,4 +54,10 @@ private:
 	UGroomComponent* HeadHair;
 	UPROPERTY(VisibleAnywhere, Category = "Hair Groom")
 	UGroomComponent* EyebrownHair;
+
+	UPROPERTY(VisibleInstanceOnly)
+	AItem* OverlappingItem;
+
+public:
+	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
 };
