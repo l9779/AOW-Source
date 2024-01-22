@@ -7,6 +7,7 @@
 #include "GroomComponent.h"
 #include "Actors/Item.h"
 #include "Actors/Weapons/Weapon.h"
+#include "Animation/AnimInstance.h"
 
 ASlashCharacter::ASlashCharacter()
 {
@@ -65,6 +66,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(LookAroundAction, ETriggerEvent::Triggered, this, &ASlashCharacter::LookAround);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Jump);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ASlashCharacter::EKeyPressed);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Attack);
 	}
 }
 
@@ -96,6 +98,52 @@ void ASlashCharacter::LookAround(const FInputActionValue& Value)
 
 void ASlashCharacter::EKeyPressed()
 {
-	if (AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem)) 
+	if (AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem))
+	{
 		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"));
+		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+	}
 }
+
+void ASlashCharacter::Attack()
+{
+	if (CanAttack())
+	{
+		PlayAttackMontage();
+		ActionState = EActionState::EAS_Attacking;
+	}
+}
+
+bool ASlashCharacter::CanAttack()
+{
+	return ActionState == EActionState::EAS_Unoccupied &&
+		CharacterState != ECharacterState::ECS_Unequipped;
+}
+
+void ASlashCharacter::PlayAttackMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		
+	if (AttackMontage && AnimInstance)
+	{
+		AnimInstance->Montage_Play(AttackMontage);
+
+		FName SectionName = FName();
+		
+		switch (int32 Selection = FMath::RandRange(0, 1))
+		{
+		case (0):
+			SectionName = FName("Attack1");
+			break;
+		case (1):
+			SectionName = FName("Attack2");
+			break;
+		default:
+			break;
+		}
+
+		AnimInstance->Montage_JumpToSection(SectionName, AttackMontage);
+	}
+}
+
+void ASlashCharacter::OnAttackEnd() { ActionState = EActionState::EAS_Unoccupied; }
