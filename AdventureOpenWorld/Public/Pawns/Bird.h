@@ -29,25 +29,26 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputMappingContext* BirdMappingContext;
+	TObjectPtr<UInputMappingContext> BirdMappingContext;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputAction* MoveAction;
+	TObjectPtr<UInputAction> MoveAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputAction* LookAction;
+	TObjectPtr<UInputAction> LookAction;
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
+
 private:
 	UPROPERTY(VisibleAnywhere)
-	UCapsuleComponent* Capsule;
+	TObjectPtr<UCapsuleComponent> Capsule;
 
 	UPROPERTY(VisibleAnywhere)
-	USkeletalMeshComponent* BirdMesh;
+	TObjectPtr<USkeletalMeshComponent> BirdMesh;
 
 	UPROPERTY(VisibleAnywhere)
-	USpringArmComponent* SpringArm;
+	TObjectPtr<USpringArmComponent> SpringArm;
 
 	UPROPERTY(VisibleAnywhere)
-	UCameraComponent* ViewCamera;
+	TObjectPtr<UCameraComponent> ViewCamera;
 };

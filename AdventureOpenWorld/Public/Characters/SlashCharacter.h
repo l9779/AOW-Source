@@ -29,21 +29,21 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputMappingContext* SlashMappingContext;
+	TObjectPtr<UInputMappingContext> SlashMappingContext;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* MovementAction;
+	TObjectPtr<UInputAction> MovementAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* LookAroundAction;
+	TObjectPtr<UInputAction> LookAroundAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* JumpAction;
+	TObjectPtr<UInputAction> JumpAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* EquipAction;
+	TObjectPtr<UInputAction> EquipAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* AttackAction;
+	TObjectPtr<UInputAction> AttackAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	UAnimMontage* AttackMontage;
+	TObjectPtr<UAnimMontage> AttackMontage;
 
 	/*
 	* Callback for input
@@ -59,8 +59,9 @@ protected:
 	void PlayAttackMontage();
 
 	UFUNCTION(BlueprintCallable)
-	void OnAttackEnd();
-	bool CanAttack();
+	void OnAttackEndNotify();
+
+	bool CanAttack() const;
 
 private:	
 	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
@@ -69,17 +70,17 @@ private:
 	EActionState ActionState = EActionState::EAS_Unoccupied;
 
 	UPROPERTY(VisibleAnywhere)
-	USpringArmComponent* SpringArm;
+	TObjectPtr<USpringArmComponent> SpringArm;
 	UPROPERTY(VisibleAnywhere)
-	UCameraComponent* ViewCamera;
+	TObjectPtr<UCameraComponent> ViewCamera;
 
 	UPROPERTY(VisibleAnywhere, Category = "Hair Groom")
-	UGroomComponent* HeadHair;
+	TObjectPtr<UGroomComponent> HeadHair;
 	UPROPERTY(VisibleAnywhere, Category = "Hair Groom")
-	UGroomComponent* EyebrownHair;
+	TObjectPtr<UGroomComponent> EyebrownHair;
 
 	UPROPERTY(VisibleInstanceOnly)
-	AItem* OverlappingItem;
+	TObjectPtr<AItem> OverlappingItem;
 
 public:
 	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }

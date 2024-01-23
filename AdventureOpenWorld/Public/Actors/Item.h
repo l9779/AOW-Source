@@ -8,6 +8,12 @@
 
 class USphereComponent;
 
+enum class EItemState : uint8
+{
+	EIS_Hovering,
+	EIS_Equipped
+};
+
 UCLASS()
 class ADVENTUREOPENWORLD_API AItem : public AActor
 {
@@ -40,13 +46,16 @@ protected:
 	virtual void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	UStaticMeshComponent* ItemMesh;
+	TObjectPtr<UStaticMeshComponent> ItemMesh;
+
+	EItemState ItemState = EItemState::EIS_Hovering;
+
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sine Parameters", meta = (AllowPrivateAccess = "true"))
 	float RunningTime = 0.f;
 
 	UPROPERTY(VisibleAnywhere)
-	USphereComponent* Sphere;
+	TObjectPtr<USphereComponent> Sphere;
 };
 
 template<typename T>

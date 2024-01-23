@@ -72,6 +72,8 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void ASlashCharacter::Movement(const FInputActionValue& Value)
 {
+	if (ActionState == EActionState::EAS_Attacking) return;
+
 	const FVector2D InputDirection = Value.Get<FVector2D>();
 
 	if (GetController())
@@ -114,10 +116,9 @@ void ASlashCharacter::Attack()
 	}
 }
 
-bool ASlashCharacter::CanAttack()
+bool ASlashCharacter::CanAttack() const
 {
-	return ActionState == EActionState::EAS_Unoccupied &&
-		CharacterState != ECharacterState::ECS_Unequipped;
+	return ActionState == EActionState::EAS_Unoccupied && CharacterState != ECharacterState::ECS_Unequipped;
 }
 
 void ASlashCharacter::PlayAttackMontage()
@@ -146,4 +147,7 @@ void ASlashCharacter::PlayAttackMontage()
 	}
 }
 
-void ASlashCharacter::OnAttackEnd() { ActionState = EActionState::EAS_Unoccupied; }
+void ASlashCharacter::OnAttackEndNotify()
+{ 
+	ActionState = EActionState::EAS_Unoccupied;
+}
