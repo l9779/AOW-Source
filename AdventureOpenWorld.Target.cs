@@ -11,5 +11,6 @@ public class AdventureOpenWorldTarget : TargetRules
 		DefaultBuildSettings = BuildSettingsVersion.V4;
 
 		ExtraModuleNames.AddRange( new string[] { "AdventureOpenWorld" } );
-	}
+        IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
+    }
 }

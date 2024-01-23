@@ -13,6 +13,7 @@ class UCameraComponent;
 class UGroomComponent;
 class AItem;
 class UAnimMontage;
+class AWeapon;
 
 UCLASS()
 class ADVENTUREOPENWORLD_API ASlashCharacter : public ACharacter
@@ -36,20 +37,26 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> LookAroundAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> WalkAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> JumpAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> EquipAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> AttackAction;
+	
 
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	TObjectPtr<UAnimMontage> AttackMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	TObjectPtr<UAnimMontage> EquipMontage;
 
 	/*
 	* Callback for input
 	*/
 	void Movement(const FInputActionValue& Value);
 	void LookAround(const FInputActionValue& Value);
+	void Walk();
 	void EKeyPressed();
 	void Attack();
 
@@ -57,14 +64,23 @@ protected:
 	* Play Montage Functions
 	*/
 	void PlayAttackMontage();
+	void PlayEquipMontage(FName SectionName);
 
 	UFUNCTION(BlueprintCallable)
 	void OnAttackEndNotify();
 
 	bool CanAttack() const;
+	bool CanDisarm() const;
+	bool CanArm() const;
 
 private:	
 	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
+
+	bool WalkMode = false;
+	UPROPERTY(EditAnywhere, Category = Movement)
+	float WalkSpeed = 300.f;
+	UPROPERTY(EditAnywhere, Category = Movement)
+	float JogSpeed = 600.f;
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	EActionState ActionState = EActionState::EAS_Unoccupied;
@@ -81,6 +97,9 @@ private:
 
 	UPROPERTY(VisibleInstanceOnly)
 	TObjectPtr<AItem> OverlappingItem;
+
+	UPROPERTY(VisibleAnywhere, Category = Weapon)
+	TObjectPtr<AWeapon> EquippedWeapon;
 
 public:
 	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
