@@ -44,7 +44,6 @@ protected:
 	TObjectPtr<UInputAction> EquipAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> AttackAction;
-	
 
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	TObjectPtr<UAnimMontage> AttackMontage;
@@ -52,7 +51,7 @@ protected:
 	TObjectPtr<UAnimMontage> EquipMontage;
 
 	/*
-	* Callback for input
+	* Input callbacks
 	*/
 	void Movement(const FInputActionValue& Value);
 	void LookAround(const FInputActionValue& Value);
@@ -65,14 +64,21 @@ protected:
 	*/
 	void PlayAttackMontage();
 	void PlayEquipMontage(FName SectionName);
-
+	
+	/*
+	*  AnimNotify callbacks
+	*/
 	UFUNCTION(BlueprintCallable)
-	void OnAttackEndNotify();
+	void ANCB_AttackEnd();
+	UFUNCTION(BlueprintCallable)
+	void ANCB_Disarm();
+	UFUNCTION(BlueprintCallable)
+	void ANCB_Arm();
 
 	bool CanAttack() const;
 	bool CanDisarm() const;
 	bool CanArm() const;
-
+	
 private:	
 	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
 
