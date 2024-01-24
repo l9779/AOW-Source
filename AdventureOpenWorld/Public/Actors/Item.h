@@ -49,13 +49,14 @@ protected:
 	TObjectPtr<UStaticMeshComponent> ItemMesh;
 
 	EItemState ItemState = EItemState::EIS_Hovering;
+	
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USphereComponent> Sphere;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sine Parameters", meta = (AllowPrivateAccess = "true"))
 	float RunningTime = 0.f;
 
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USphereComponent> Sphere;
 };
 
 template<typename T>
