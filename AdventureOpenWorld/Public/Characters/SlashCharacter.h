@@ -74,6 +74,8 @@ protected:
 	void ANCB_Disarm();
 	UFUNCTION(BlueprintCallable)
 	void ANCB_Arm();
+	UFUNCTION(BlueprintCallable)
+	void ANCB_SetWeaponBoxCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
 
 	bool CanAttack() const;
 	bool CanDisarm() const;

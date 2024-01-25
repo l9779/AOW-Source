@@ -8,6 +8,7 @@
 #include "Actors/Item.h"
 #include "Actors/Weapons/Weapon.h"
 #include "Animation/AnimInstance.h"
+#include "Components/BoxComponent.h"
 
 ASlashCharacter::ASlashCharacter()
 {
@@ -166,13 +167,19 @@ void ASlashCharacter::PlayAttackMontage()
 
 		FName SectionName = FName();
 		
-		switch (int32 Selection = FMath::RandRange(0, 1))
+		switch (int32 Selection = FMath::RandRange(0, 3))
 		{
 		case (0):
 			SectionName = FName("Attack1");
 			break;
 		case (1):
 			SectionName = FName("Attack2");
+			break;
+		case (2):
+			SectionName = FName("Attack3");
+			break;
+		case (3):
+			SectionName = FName("Attack4");
 			break;
 		default:
 			break;
@@ -209,4 +216,10 @@ void ASlashCharacter::ANCB_Arm()
 {
 	EquippedWeapon->AttachMeshToSocket(GetMesh(), FName("RightHandSocket"));
 	ActionState = EActionState::EAS_Unoccupied;
+}
+
+void ASlashCharacter::ANCB_SetWeaponBoxCollisionEnabled(ECollisionEnabled::Type CollisionEnabled)
+{
+	if (EquippedWeapon && EquippedWeapon->GetWeaponBox()) 
+		EquippedWeapon->GetWeaponBox()->SetCollisionEnabled(CollisionEnabled);
 }
