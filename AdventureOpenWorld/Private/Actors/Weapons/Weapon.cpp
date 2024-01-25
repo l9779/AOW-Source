@@ -4,6 +4,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/SphereComponent.h"
 #include "Components/BoxComponent.h"
+#include "Interfaces/HitInterface.h"
 
 AWeapon::AWeapon()
 {
@@ -42,19 +43,24 @@ void AWeapon::Equip(USceneComponent* InParent, FName InSocketName)
 
 void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName)
 {
-	ItemMesh->AttachToComponent(InParent, 
+	ItemMesh->AttachToComponent(
+		InParent, 
 		FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
-		InSocketName);
+		InSocketName
+	);
+
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	Super::OnSphereOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
+
 }
 
 void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	Super::OnSphereEndOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
+
 }
 
 void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -64,10 +70,11 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(GetOwner());
+	for (AActor* Actor : IgnoreActors) ActorsToIgnore.Add(Actor);
 
 	FHitResult OutBoxHit;
-
-	UKismetSystemLibrary::BoxTraceSingle(this,
+	UKismetSystemLibrary::BoxTraceSingle(
+		this,
 		Start,
 		End,
 		FVector(5.f, 5.f, 5.f),
@@ -77,5 +84,13 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 		ActorsToIgnore,
 		EDrawDebugTrace::ForDuration,
 		OutBoxHit,
-		true);
+		true
+	);
+
+	if (IHitInterface* HitInterface = Cast<IHitInterface>(OutBoxHit.GetActor()))
+	{
+		HitInterface->GetHit(OutBoxHit.ImpactPoint);
+		IgnoreActors.AddUnique(OutBoxHit.GetActor());
+	}
+
 }

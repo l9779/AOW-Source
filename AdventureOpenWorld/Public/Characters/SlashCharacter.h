@@ -45,6 +45,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> AttackAction;
 
+	/*
+	* Animation Montages
+	*/
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	TObjectPtr<UAnimMontage> AttackMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
@@ -63,7 +66,7 @@ protected:
 	* Play Montage Functions
 	*/
 	void PlayAttackMontage();
-	void PlayEquipMontage(FName SectionName);
+	void PlayEquipMontage(const FName& SectionName);
 	
 	/*
 	*  AnimNotify callbacks
@@ -82,6 +85,14 @@ protected:
 	bool CanArm() const;
 	
 private:	
+	/*
+	* Dev Only
+	*/
+	UPROPERTY(EditAnywhere, Category = "Development Only Settings", meta = (AllowPrivateAccess = "true"))
+	bool AttackMontageOvewrite = false;
+	UPROPERTY(EditAnywhere, Category = "Development Only Settings", meta = (AllowPrivateAccess = "true"))
+	FName AttackSectionName = FName("");
+	
 	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
 
 	bool WalkMode = false;

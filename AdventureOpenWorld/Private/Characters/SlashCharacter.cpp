@@ -185,11 +185,14 @@ void ASlashCharacter::PlayAttackMontage()
 			break;
 		}
 
+		// !! Development only !!
+		if (AttackMontageOvewrite) SectionName = AttackSectionName;
+
 		AnimInstance->Montage_JumpToSection(SectionName, AttackMontage);
 	}
 }
 
-void ASlashCharacter::PlayEquipMontage(FName SectionName)
+void ASlashCharacter::PlayEquipMontage(const FName& SectionName)
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 
@@ -220,6 +223,9 @@ void ASlashCharacter::ANCB_Arm()
 
 void ASlashCharacter::ANCB_SetWeaponBoxCollisionEnabled(ECollisionEnabled::Type CollisionEnabled)
 {
-	if (EquippedWeapon && EquippedWeapon->GetWeaponBox()) 
+	if (EquippedWeapon && EquippedWeapon->GetWeaponBox())
+	{
 		EquippedWeapon->GetWeaponBox()->SetCollisionEnabled(CollisionEnabled);
+		EquippedWeapon->ClearIgnoreActors();
+	}
 }
