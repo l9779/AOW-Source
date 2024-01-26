@@ -22,7 +22,8 @@ class ADVENTUREOPENWORLD_API IHitInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	// = 0 makes a pure virtual function
-	// pure virtual function is a function that can not be implemented in the class that was declared
-	virtual void GetHit(const FVector& ImpactPoint) = 0;
+	// Function implementable on blueprint, to implement on C++ use GetHit_Implementation
+	// To Execute on C++ use Execute_GetHit()
+	UFUNCTION(BlueprintNativeEvent) 
+	void GetHit(const FVector& ImpactPoint);
 };
