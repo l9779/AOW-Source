@@ -33,6 +33,10 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Sounds")
 	TObjectPtr<USoundBase> HitSound;
+
+	UPROPERTY(EditAnywhere, Category = "VFX")
+	TObjectPtr<UParticleSystem> HitParticles;
+
 public:	
 	
 };
