@@ -22,9 +22,15 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	TObjectPtr<class UBoxComponent> VolumeBox;
+
 private:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UGeometryCollectionComponent> GeometryCollection;
+
+	UPROPERTY(EditAnywhere, Category = "Breakable Properties")
+	TSubclassOf<class ATreasure> TreasureClass;
 
 public:	
 

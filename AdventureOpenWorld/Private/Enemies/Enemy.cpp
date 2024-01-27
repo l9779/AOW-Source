@@ -1,5 +1,4 @@
 #include "Enemies/Enemy.h"
-#include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "AdventureOpenWorld/DebugMacros.h"
 #include "Animation/AnimInstance.h"

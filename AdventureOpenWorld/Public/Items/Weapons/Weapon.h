@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actors/Item.h"
+#include "Items/Item.h"
 #include "Weapon.generated.h"
 
 class UBoxComponent;

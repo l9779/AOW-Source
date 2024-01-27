@@ -5,8 +5,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "GroomComponent.h"
-#include "Actors/Item.h"
-#include "Actors/Weapons/Weapon.h"
+#include "Items/Item.h"
+#include "Items/Weapons/Weapon.h"
 #include "Animation/AnimInstance.h"
 #include "Components/BoxComponent.h"
 
@@ -36,6 +36,7 @@ ASlashCharacter::ASlashCharacter()
 	EyebrownHair = CreateDefaultSubobject<UGroomComponent>(TEXT("EyebrownHair"));
 	EyebrownHair->SetupAttachment(GetMesh());
 	EyebrownHair->AttachmentName = FString("head");
+
 }
 
 void ASlashCharacter::BeginPlay()

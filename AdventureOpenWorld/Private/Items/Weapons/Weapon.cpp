@@ -1,4 +1,4 @@
-#include "Actors/Weapons/Weapon.h"
+#include "Items/Weapons/Weapon.h"
 #include "Characters/SlashCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
