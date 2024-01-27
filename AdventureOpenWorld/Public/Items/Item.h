@@ -53,14 +53,11 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USphereComponent> Sphere;
 
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class UNiagaraComponent> EmbersEffect;
+
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sine Parameters", meta = (AllowPrivateAccess = "true"))
 	float RunningTime = 0.f;
 
 };
-
-template<typename T>
-inline T AItem::Avg(T First, T Second)
-{
-	return (First + Second) / 2;
-}

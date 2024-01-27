@@ -25,13 +25,19 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	TObjectPtr<class UBoxComponent> VolumeBox;
 
+	UFUNCTION()
+	void OnChaosBreak(const FChaosBreakEvent& BreakEvent);
+
 private:
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UGeometryCollectionComponent> GeometryCollection;
 
 	UPROPERTY(EditAnywhere, Category = "Breakable Properties")
-	TSubclassOf<class ATreasure> TreasureClass;
-
+	TArray<TSubclassOf<class ATreasure>> TreasureClasses;
+	UPROPERTY(EditAnywhere, Category = "Breakable Properties")
+	bool bShouldSpawnTreasure;
+	
+	bool bBroken;
 public:	
 
 };

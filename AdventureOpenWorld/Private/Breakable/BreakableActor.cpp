@@ -3,7 +3,8 @@
 #include "Components/BoxComponent.h"
 #include "Items/Pickups/Treasure.h"
 
-ABreakableActor::ABreakableActor()
+ABreakableActor::ABreakableActor() :
+	bBroken(false), bShouldSpawnTreasure(true)
 {
 	PrimaryActorTick.bCanEverTick = false;
 
@@ -24,6 +25,12 @@ void ABreakableActor::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	GeometryCollection->OnChaosBreakEvent.AddDynamic(this, &ABreakableActor::OnChaosBreak);
+}
+
+void ABreakableActor::OnChaosBreak(const FChaosBreakEvent& BreakEvent)
+{
+	VolumeBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 }
 
 void ABreakableActor::Tick(float DeltaTime)
@@ -34,10 +41,19 @@ void ABreakableActor::Tick(float DeltaTime)
 
 void ABreakableActor::GetHit_Implementation(const FVector& ImpactPoint)
 {
-	FVector SpawnLocation = GetActorLocation();
-	SpawnLocation.Z += 75.f;
+	if (bBroken) return;
+	bBroken = true;
 
-	if (GetWorld() && TreasureClass)
-		GetWorld()->SpawnActor<ATreasure>(TreasureClass, SpawnLocation, GetActorRotation());
+	if (GetWorld() && (TreasureClasses.Num() > 0) && bShouldSpawnTreasure)
+	{
+		FVector SpawnLocation = GetActorLocation();
+		SpawnLocation.Z += 75.f;
+
+		GetWorld()->SpawnActor<ATreasure>(
+			TreasureClasses[FMath::RandRange(0, TreasureClasses.Num() - 1)],
+			SpawnLocation, 
+			GetActorRotation()
+		);
+	}
 
 }

@@ -5,6 +5,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/BoxComponent.h"
 #include "Interfaces/HitInterface.h"
+#include "NiagaraComponent.h"
 
 AWeapon::AWeapon()
 {
@@ -39,6 +40,8 @@ void AWeapon::Equip(USceneComponent* InParent, FName InSocketName)
 		UGameplayStatics::PlaySoundAtLocation(this, EquipSound, GetActorLocation());
 
 	if (Sphere) Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	if (EmbersEffect) EmbersEffect->Deactivate();
 }
 
 void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName)
