@@ -66,6 +66,7 @@ protected:
 	* Play Montage Functions
 	*/
 	void PlayAttackMontage();
+	void RotateCharacterAttackToController(float DeltaTime);
 	void PlayEquipMontage(const FName& SectionName);
 	
 	/*
@@ -79,6 +80,8 @@ protected:
 	void ANCB_Arm();
 	UFUNCTION(BlueprintCallable)
 	void ANCB_SetWeaponBoxCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
+	UFUNCTION(BlueprintCallable)
+	void ANCB_SetDirectionAttack(bool b);
 
 	bool CanAttack() const;
 	bool CanDisarm() const;
@@ -94,6 +97,8 @@ private:
 	FName AttackSectionName = FName("");
 	
 	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
+	/* Set by anim notify */
+	bool OrientAttackToRotation = false;
 
 	bool WalkMode = false;
 	UPROPERTY(EditAnywhere, Category = Movement)

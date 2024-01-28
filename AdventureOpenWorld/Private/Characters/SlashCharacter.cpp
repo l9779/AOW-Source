@@ -44,17 +44,16 @@ void ASlashCharacter::BeginPlay()
 	Super::BeginPlay();
 	
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
-	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
 			Subsystem->AddMappingContext(SlashMappingContext, 0);
-		}
-	}
+	
 }
 
 void ASlashCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (OrientAttackToRotation) RotateCharacterAttackToController(DeltaTime);
 
 }
 
@@ -69,6 +68,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started , this, &ASlashCharacter::Jump);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &ASlashCharacter::EKeyPressed);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ASlashCharacter::Attack);
+		EnhancedInputComponent->BindAction(WalkAction, ETriggerEvent::Started, this, &ASlashCharacter::Walk);
 	}
 }
 
@@ -127,7 +127,6 @@ void ASlashCharacter::EKeyPressed()
 		PlayEquipMontage(FName("Equip"));
 		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
 	}
-	
 }
 
 void ASlashCharacter::Attack()
@@ -193,6 +192,13 @@ void ASlashCharacter::PlayAttackMontage()
 	}
 }
 
+void ASlashCharacter::RotateCharacterAttackToController(float DeltaTime)
+{
+	FRotator NewCharacterRotation = GetActorRotation();
+	NewCharacterRotation.Yaw = GetControlRotation().Yaw;
+	SetActorRotation(FMath::RInterpTo(GetActorRotation(), NewCharacterRotation, DeltaTime, 10.f));
+}
+
 void ASlashCharacter::PlayEquipMontage(const FName& SectionName)
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -229,4 +235,9 @@ void ASlashCharacter::ANCB_SetWeaponBoxCollisionEnabled(ECollisionEnabled::Type 
 		EquippedWeapon->GetWeaponBox()->SetCollisionEnabled(CollisionEnabled);
 		EquippedWeapon->ClearIgnoreActors();
 	}
+}
+
+void ASlashCharacter::ANCB_SetDirectionAttack(bool b)
+{
+	OrientAttackToRotation = b;
 }
