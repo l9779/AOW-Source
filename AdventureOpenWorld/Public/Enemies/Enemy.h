@@ -37,6 +37,12 @@ private:
 	UPROPERTY(EditAnywhere, Category = "VFX")
 	TObjectPtr<UParticleSystem> HitParticles;
 
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UAttributeComponent> Attributes;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UHealthBarComponent> HealthBarWidgetComponent;
+
 public:	
 	
 };
