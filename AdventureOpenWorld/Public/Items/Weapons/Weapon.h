@@ -14,7 +14,7 @@ class ADVENTUREOPENWORLD_API AWeapon : public AItem
 public:
 	AWeapon();
 
-	void Equip(USceneComponent* InParent, FName InSocketName);
+	void Equip(USceneComponent* InParent, FName InSocketName, AActor* NewOwner, APawn* NewInstigator);
 	void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName);
 
 	FORCEINLINE void ClearIgnoreActors() { IgnoreActors.Empty(); }
@@ -36,6 +36,8 @@ private:
 	TObjectPtr<USoundBase> EquipSound;
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	TObjectPtr<UBoxComponent> WeaponBox;
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	float Damage;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USceneComponent> BoxTraceStart;

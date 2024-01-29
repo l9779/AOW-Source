@@ -29,8 +29,41 @@ void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (HealthBarWidgetComponent) HealthBarWidgetComponent->SetHealthPercent(.5f);
+	if (HealthBarWidgetComponent) HealthBarWidgetComponent->SetHealthPercent(1.f);
 
+}
+
+void AEnemy::Die()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && DeathMontage)
+	{
+		AnimInstance->Montage_Play(DeathMontage);
+		FName SectionName = FName();
+
+		switch (int32 Selection = FMath::RandRange(1, 5))
+		{
+		case 1:
+			SectionName = FName("Death1");
+			break;
+		case 2:
+			SectionName = FName("Death2");
+			break;
+		case 3:
+			SectionName = FName("Death3");
+			break;
+		case 4:
+			SectionName = FName("Death4");
+			break;
+		case 5:
+			SectionName = FName("Death5");
+			break;
+		default:
+			break;
+		}
+
+		AnimInstance->Montage_JumpToSection(SectionName, DeathMontage);
+	}
 }
 
 void AEnemy::PlayHitReactMontage(const FName& SectionName)
@@ -57,7 +90,8 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
 {
-	DirectionalHitReact(ImpactPoint);
+	if (Attributes && Attributes->IsAlive()) DirectionalHitReact(ImpactPoint);
+	else Die();
 
 	if (HitSound) UGameplayStatics::PlaySoundAtLocation(this, HitSound, ImpactPoint);
 
@@ -86,7 +120,6 @@ void AEnemy::DirectionalHitReact(const FVector& ImpactPoint)
 	if (CrossProduct.Z < 0) Theta *= -1.f;
 
 	FName Section("FromBackLarge");
-
 	if (Theta >= -45.f && Theta < 45.f) Section = FName("FromFrontLarge");
 	else if (Theta >= -135.f && Theta < -45.f) Section = FName("FromLeftLarge");
 	else if (Theta >= 45.f && Theta < 135.f) Section = FName("FromRightLarge");
@@ -97,7 +130,16 @@ void AEnemy::DirectionalHitReact(const FVector& ImpactPoint)
 	UKismetSystemLibrary::DrawDebugArrow(this, GetActorLocation(), GetActorLocation() + GetActorForwardVector() * 60.f, 5.f, FColor::Red, 5.f);
 	UKismetSystemLibrary::DrawDebugArrow(this, GetActorLocation(), GetActorLocation() + ToHit * 60.f, 5.f, FColor::Green, 5.f);
 	*/
+}
 
-	if (GEngine) GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Emerald, FString::Printf(TEXT("Theta %f"), Theta));
+float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	if (Attributes && HealthBarWidgetComponent)
+	{
+		Attributes->ReceiveDamage(DamageAmount);	 
+		HealthBarWidgetComponent->SetHealthPercent(Attributes->GetHealthPercent());
+	}
+
+	return DamageAmount;
 }
 
