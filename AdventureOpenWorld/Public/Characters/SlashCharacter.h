@@ -66,7 +66,7 @@ protected:
 	* Play Montage Functions
 	*/
 	void PlayAttackMontage();
-	void RotateCharacterAttackToController(float DeltaTime);
+	void OrientAttackRotation(float DeltaTime);
 	void PlayEquipMontage(const FName& SectionName);
 	
 	/*
@@ -124,6 +124,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	TObjectPtr<AWeapon> EquippedWeapon;
+
+	float InputY = 0.f;
+	float InputX = 0.f;
 
 public:
 	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }

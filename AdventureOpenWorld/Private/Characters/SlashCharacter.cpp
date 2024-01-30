@@ -9,6 +9,7 @@
 #include "Items/Weapons/Weapon.h"
 #include "Animation/AnimInstance.h"
 #include "Components/BoxComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 ASlashCharacter::ASlashCharacter()
 {
@@ -53,7 +54,7 @@ void ASlashCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (OrientAttackToRotation) RotateCharacterAttackToController(DeltaTime);
+	if (OrientAttackToRotation) OrientAttackRotation(DeltaTime);
 
 }
 
@@ -77,6 +78,9 @@ void ASlashCharacter::Movement(const FInputActionValue& Value)
 	if (ActionState == EActionState::EAS_Attacking) return;
 
 	const FVector2D InputDirection = Value.Get<FVector2D>();
+
+	InputY = InputDirection.Y;
+	InputX = InputDirection.X;
 
 	if (GetController())
 	{
@@ -192,11 +196,20 @@ void ASlashCharacter::PlayAttackMontage()
 	}
 }
 
-void ASlashCharacter::RotateCharacterAttackToController(float DeltaTime)
+void ASlashCharacter::OrientAttackRotation(float DeltaTime)
 {
-	FRotator NewCharacterRotation = GetActorRotation();
-	NewCharacterRotation.Yaw = GetControlRotation().Yaw;
-	SetActorRotation(FMath::RInterpTo(GetActorRotation(), NewCharacterRotation, DeltaTime, 10.f));
+	//if (InputX == 0.f && InputY == 0.f) {
+		FRotator NewCharacterRotation = GetActorRotation();
+		NewCharacterRotation.Yaw = GetControlRotation().Yaw;
+		SetActorRotation(FMath::RInterpTo(GetActorRotation(), NewCharacterRotation, DeltaTime, 10.f));
+	/*
+	}
+	else
+	{
+		if (InputY != 0.f) SetActorRotation(GetActorForwardVector().Rotation());
+		if (InputX != 0.f) SetActorRotation(GetActorRightVector().Rotation());
+	}
+	*/
 }
 
 void ASlashCharacter::PlayEquipMontage(const FName& SectionName)

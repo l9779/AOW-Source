@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/HitInterface.h"
+#include "Characters/CharacterTypes.h"
 #include "Enemy.generated.h"
 
 class UAnimMontage;
@@ -29,6 +30,8 @@ protected:
 
 	void PlayHitReactMontage(const FName& SectionName);
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	EDeathPose DeathPose;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
@@ -47,6 +50,11 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UHealthBarComponent> HealthBarWidgetComponent;
+
+	UPROPERTY()
+	TObjectPtr<AActor> CombatTarget;
+	UPROPERTY(EditAnywhere)
+	double CombatRadius;
 
 public:	
 	
