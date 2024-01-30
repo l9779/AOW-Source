@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Items/Item.h"
+#include "Characters/CharacterTypes.h"
 #include "Weapon.generated.h"
 
 class UBoxComponent;
@@ -38,6 +39,8 @@ private:
 	TObjectPtr<UBoxComponent> WeaponBox;
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	float Damage;
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	ECharacterState EquipState;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USceneComponent> BoxTraceStart;
@@ -48,4 +51,5 @@ private:
 
 public:
 	FORCEINLINE TObjectPtr<UBoxComponent> GetWeaponBox() { return WeaponBox; }
+	FORCEINLINE ECharacterState GetEquipState() { return EquipState; }
 };

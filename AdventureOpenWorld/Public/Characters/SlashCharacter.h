@@ -49,7 +49,9 @@ protected:
 	* Animation Montages
 	*/
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	TObjectPtr<UAnimMontage> AttackMontage;
+	TObjectPtr<UAnimMontage> OneHandSwordAttackMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	TObjectPtr<UAnimMontage> GreatSwordAttackMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	TObjectPtr<UAnimMontage> EquipMontage;
 
@@ -57,6 +59,7 @@ protected:
 	* Input callbacks
 	*/
 	void Movement(const FInputActionValue& Value);
+	void ClearMovement(const FInputActionValue& Value);
 	void LookAround(const FInputActionValue& Value);
 	void Walk();
 	void EKeyPressed();

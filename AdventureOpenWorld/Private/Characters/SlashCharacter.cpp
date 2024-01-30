@@ -47,7 +47,7 @@ void ASlashCharacter::BeginPlay()
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 			Subsystem->AddMappingContext(SlashMappingContext, 0);
-	
+
 }
 
 void ASlashCharacter::Tick(float DeltaTime)
@@ -65,6 +65,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Movement);
+		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::None , this, &ASlashCharacter::ClearMovement);
 		EnhancedInputComponent->BindAction(LookAroundAction, ETriggerEvent::Triggered, this, &ASlashCharacter::LookAround);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started , this, &ASlashCharacter::Jump);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &ASlashCharacter::EKeyPressed);
@@ -93,6 +94,14 @@ void ASlashCharacter::Movement(const FInputActionValue& Value)
 	}
 }
 
+void ASlashCharacter::ClearMovement(const FInputActionValue& Value)
+{
+	const FVector2D InputDirection = Value.Get<FVector2D>();
+
+	if (InputDirection.Y == 0.f) InputY = InputDirection.Y;
+	if (InputDirection.X == 0.f) InputX = InputDirection.X;
+}
+
 void ASlashCharacter::LookAround(const FInputActionValue& Value)
 {
 	const FVector2D LookDirectionAxis = Value.Get<FVector2D>();
@@ -116,20 +125,35 @@ void ASlashCharacter::EKeyPressed()
 {
 	if (AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem))
 	{
-		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
-		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
-		OverlappingItem = nullptr;
+		FName SocketName("OneHandSwordSocket");
+
+		if (OverlappingWeapon->GetEquipState() == ECharacterState::ECS_EquippedTwoHandedWeapon)
+			SocketName = FName("GreatSwordSocket");
+
+		OverlappingWeapon->Equip(GetMesh(), SocketName, this, this);
+		CharacterState = OverlappingWeapon->GetEquipState();
 		EquippedWeapon = OverlappingWeapon;
+		OverlappingItem = nullptr;
 	} 
 	else if (CanDisarm())
 	{
-		PlayEquipMontage(FName("Unequip"));
+		FName SectionName("Unequip");
+
+		if (EquippedWeapon->GetEquipState() == ECharacterState::ECS_EquippedTwoHandedWeapon)
+			SectionName = FName("UnequipGreatSword");
+
+		PlayEquipMontage(SectionName);
 		CharacterState = ECharacterState::ECS_Unequipped;
 	}
 	else if (CanArm())
 	{
-		PlayEquipMontage(FName("Equip"));
-		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+		FName SectionName("Equip");
+
+		if (EquippedWeapon->GetEquipState() == ECharacterState::ECS_EquippedTwoHandedWeapon)
+			SectionName = FName("EquipGreatSword");
+
+		PlayEquipMontage(SectionName);
+		CharacterState = OverlappingWeapon->GetEquipState();
 	}
 }
 
@@ -164,7 +188,11 @@ bool ASlashCharacter::CanArm() const
 void ASlashCharacter::PlayAttackMontage()
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		
+	UAnimMontage* AttackMontage = OneHandSwordAttackMontage;
+
+	if (EquippedWeapon->GetEquipState() == ECharacterState::ECS_EquippedTwoHandedWeapon)
+		AttackMontage = GreatSwordAttackMontage;
+
 	if (AttackMontage && AnimInstance)
 	{
 		AnimInstance->Montage_Play(AttackMontage);
@@ -198,18 +226,24 @@ void ASlashCharacter::PlayAttackMontage()
 
 void ASlashCharacter::OrientAttackRotation(float DeltaTime)
 {
-	//if (InputX == 0.f && InputY == 0.f) {
-		FRotator NewCharacterRotation = GetActorRotation();
-		NewCharacterRotation.Yaw = GetControlRotation().Yaw;
-		SetActorRotation(FMath::RInterpTo(GetActorRotation(), NewCharacterRotation, DeltaTime, 10.f));
-	/*
+	/* TODO
+	* If there's movement input at the baginning of attack make character direction attack to direction
+	* Like Batman Arkham games
+	*/
+	if (InputX != 0.f || InputY != 0.f)
+	{
+		FVector InputDirection(InputY, InputX, 0.f);
+		FRotator InputRotator = UKismetMathLibrary::MakeRotationFromAxes(InputDirection, FVector::ZeroVector, FVector::ZeroVector);
+		FRotator DirectionRotator = UKismetMathLibrary::ComposeRotators(InputRotator, GetControlRotation());
+		SetActorRotation(FRotator(0.f, DirectionRotator.Yaw, 0.f));
 	}
 	else
 	{
-		if (InputY != 0.f) SetActorRotation(GetActorForwardVector().Rotation());
-		if (InputX != 0.f) SetActorRotation(GetActorRightVector().Rotation());
+		FRotator NewCharacterRotation = GetActorRotation();
+		NewCharacterRotation.Yaw = GetControlRotation().Yaw;
+		SetActorRotation(FMath::RInterpTo(GetActorRotation(), NewCharacterRotation, DeltaTime, 10.f));
 	}
-	*/
+
 }
 
 void ASlashCharacter::PlayEquipMontage(const FName& SectionName)

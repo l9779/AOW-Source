@@ -7,8 +7,11 @@
 #include "Interfaces/HitInterface.h"
 #include "NiagaraComponent.h"
 
-AWeapon::AWeapon(): Damage(20.f)
+AWeapon::AWeapon(): 
+	Damage(20.f),
+	EquipState(ECharacterState::ECS_EquippedOneHandedWeapon)
 {
+
 	WeaponBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Weapon Box"));
 	WeaponBox->SetupAttachment(GetRootComponent());
 	WeaponBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
