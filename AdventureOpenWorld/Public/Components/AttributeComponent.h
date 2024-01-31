@@ -24,9 +24,16 @@ private:
 	float Health;
 	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
 	float MaxHealth;
+	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
+	float WalkSpeed;
+	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
+	float RunSpeed;
 
 public:
 	void ReceiveDamage(float Damage);
 	float GetHealthPercent();
 	bool IsAlive();
+
+	FORCEINLINE float GetWalkSpeed() { return WalkSpeed; }
+	FORCEINLINE float GetRunSpeed() { return RunSpeed; }
 };

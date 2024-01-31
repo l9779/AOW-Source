@@ -11,6 +11,10 @@
 #include "Components/BoxComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
+/*
+* FIX GREATSWORD UNEQUIP
+*/
+
 ASlashCharacter::ASlashCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -47,6 +51,8 @@ void ASlashCharacter::BeginPlay()
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 			Subsystem->AddMappingContext(SlashMappingContext, 0);
+
+	Tags.Add(FName("SlashCharacter"));
 
 }
 

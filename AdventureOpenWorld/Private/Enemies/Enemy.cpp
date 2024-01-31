@@ -1,17 +1,19 @@
 #include "Enemies/Enemy.h"
-#include "Components/CapsuleComponent.h"
-#include "AdventureOpenWorld/DebugMacros.h"
+#include "AIController.h"
 #include "Animation/AnimInstance.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/AttributeComponent.h"
 #include "HUD/HealthBarComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "AIController.h"
+#include "Perception/PawnSensingComponent.h"
+#include "AdventureOpenWorld/DebugMacros.h"
 
 AEnemy::AEnemy(): 
-	DeathPose(EDeathPose::EDP_Alive),
-	CombatRadius(500.f), PatrolRadius(200.f)
+	DeathPose(EDeathPose::EDP_Alive), EnemyState(EEnemyState::EES_Patrolling),
+	AttackRadius(120.f), CombatRadius(500.f),
+	PatrolRadius(200.f), PatrolWaitMin(5.f), PatrolWaitMax(10.f)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -27,10 +29,16 @@ AEnemy::AEnemy():
 	HealthBarWidgetComponent = CreateDefaultSubobject<UHealthBarComponent>(TEXT("Health Bar"));
 	HealthBarWidgetComponent->SetupAttachment(GetRootComponent());
 
+	GetCharacterMovement()->MaxWalkSpeed = 125.f;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
 	bUseControllerRotationYaw = false;
+	
+	PawnSensing = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("Pawn Sensing"));
+	PawnSensing->SightRadius = 4000.f;
+	PawnSensing->SetPeripheralVisionAngle(45.f);
+
 }
 
 void AEnemy::BeginPlay()
@@ -41,16 +49,9 @@ void AEnemy::BeginPlay()
 
 	EnemyController = Cast<AAIController>(GetController());
 
-	if (EnemyController && PatrolTarget)
-	{
-		FAIMoveRequest MoveRequest;
-		MoveRequest.SetGoalActor(PatrolTarget);
-		MoveRequest.SetAcceptanceRadius(10.f);
-		FNavPathSharedPtr NavPath;
-		EnemyController->MoveTo(MoveRequest, &NavPath);
-		TArray<FNavPathPoint>& PathPoints = NavPath->GetPathPoints();
-		for (auto& Point : PathPoints) DRAW_SPHERE(Point.Location, FColor::Green)
-	}
+	MoveToTarget(PatrolTarget);
+
+	if (PawnSensing) PawnSensing->OnSeePawn.AddDynamic(this, &AEnemy::PawnSeen);
 
 }
 
@@ -58,28 +59,52 @@ void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (CombatTarget && !InTargetRange(CombatTarget, CombatRadius))
+	if (EnemyState > EEnemyState::EES_Patrolling) CheckCombatTarget();
+	else CheckPatrolTarget();
+	
+}
+
+void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+}
+
+void AEnemy::CheckCombatTarget()
+{
+	if (!InTargetRange(CombatTarget, CombatRadius))
 	{
+		// Out of combat radius -> lose interest
 		CombatTarget = nullptr;
+
 		if (HealthBarWidgetComponent) HealthBarWidgetComponent->SetVisibility(false);
+
+		EnemyState = EEnemyState::EES_Patrolling;
+		GetCharacterMovement()->MaxWalkSpeed = Attributes->GetWalkSpeed();
+		MoveToTarget(PatrolTarget);
 	}
-
-	if (EnemyController && PatrolTarget && InTargetRange(PatrolTarget, PatrolRadius))
+	else if (!InTargetRange(CombatTarget, AttackRadius) && EnemyState != EEnemyState::EES_Chasing)
 	{
-		TArray<AActor*> ValidTargets;
-		for (AActor* Target : PatrolTargets)
-			if (Target != PatrolTarget) ValidTargets.AddUnique(Target);
-		
-		if (ValidTargets.Num() > 0)
-		{
-			PatrolTarget = ValidTargets[FMath::RandRange(0, ValidTargets.Num() - 1)];
+		// Outisde attack range -> Chase Character
+		EnemyState = EEnemyState::EES_Chasing;
+		GetCharacterMovement()->MaxWalkSpeed = Attributes->GetRunSpeed();
+		MoveToTarget(CombatTarget);
+	}
+	else if (InTargetRange(CombatTarget, AttackRadius) && EnemyState != EEnemyState::EES_Attacking)
+	{
+		// Inside attack range -> Attack Character
+		EnemyState = EEnemyState::EES_Attacking;
+		/* TODO: Attack montage */
+	}
+}
 
-			FAIMoveRequest MoveRequest;
-			MoveRequest.SetGoalActor(PatrolTarget);
-			MoveRequest.SetAcceptanceRadius(15.f);
-			EnemyController->MoveTo(MoveRequest);
-		}
-
+void AEnemy::CheckPatrolTarget()
+{
+	if (InTargetRange(PatrolTarget, PatrolRadius))
+	{
+		PatrolTarget = ChoosePatrolTarget();
+		const float WaitTime = FMath::RandRange(PatrolWaitMin, PatrolWaitMax);
+		GetWorldTimerManager().SetTimer(PatrolTimer, this, &AEnemy::PatrolTimerFinished, WaitTime);
 	}
 }
 
@@ -123,9 +148,55 @@ void AEnemy::Die()
 
 bool AEnemy::InTargetRange(AActor* Target, double Radius) const
 {
-	DRAW_SPHERE_SingleFrame(GetActorLocation(), FColor::Green);
-	DRAW_SPHERE_SingleFrame(Target->GetActorLocation(), FColor::Cyan);
+	if (!Target) return false;
+
 	return (Target->GetActorLocation() - GetActorLocation()).Size() <= Radius;
+}
+
+void AEnemy::MoveToTarget(AActor* Target)
+{
+	if (!EnemyController || !PatrolTarget) return;
+	
+	FAIMoveRequest MoveRequest;
+	MoveRequest.SetGoalActor(Target);
+	MoveRequest.SetAcceptanceRadius(15.f);
+	EnemyController->MoveTo(MoveRequest);
+
+}
+
+AActor* AEnemy::ChoosePatrolTarget()
+{
+	TArray<AActor*> ValidTargets;
+	for (AActor* Target : PatrolTargets)
+	if (Target != PatrolTarget) ValidTargets.AddUnique(Target);
+
+	if (ValidTargets.Num() > 0)
+		return ValidTargets[FMath::RandRange(0, ValidTargets.Num() - 1)];
+	
+	return nullptr;
+}
+
+void AEnemy::PawnSeen(APawn* SeenPawn)
+{
+	if (EnemyState == EEnemyState::EES_Chasing) return;
+
+	if (SeenPawn->ActorHasTag(FName("SlashCharacter")))
+	{
+		GetWorldTimerManager().ClearTimer(PatrolTimer);
+		GetCharacterMovement()->MaxWalkSpeed = Attributes->GetRunSpeed();
+		CombatTarget = SeenPawn;
+
+		if (EnemyState != EEnemyState::EES_Attacking)
+		{
+			EnemyState = EEnemyState::EES_Chasing;
+			MoveToTarget(CombatTarget);
+		}
+	}
+}
+
+void AEnemy::PatrolTimerFinished()
+{
+	MoveToTarget(PatrolTarget);
 }
 
 void AEnemy::PlayHitReactMontage(const FName& SectionName)
@@ -136,12 +207,6 @@ void AEnemy::PlayHitReactMontage(const FName& SectionName)
 		AnimInstance->Montage_Play(HitReactMontage);
 		AnimInstance->Montage_JumpToSection(SectionName, HitReactMontage);
 	}
-}
-
-void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
 
 void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
@@ -198,7 +263,11 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 		HealthBarWidgetComponent->SetHealthPercent(Attributes->GetHealthPercent());
 	}
 
+	EnemyState = EEnemyState::EES_Chasing;
+	GetCharacterMovement()->MaxWalkSpeed = Attributes->GetRunSpeed();
 	CombatTarget = EventInstigator->GetPawn();
+	MoveToTarget(CombatTarget);
+
 	return DamageAmount;
 }
 

@@ -1,7 +1,8 @@
 #include "Components/AttributeComponent.h"
 
 UAttributeComponent::UAttributeComponent():
-	Health(100.f), MaxHealth(100.f)
+	Health(100.f), MaxHealth(100.f), 
+	WalkSpeed(125.f), RunSpeed(600.f)
 {
 	PrimaryComponentTick.bCanEverTick = true;
 

@@ -27,7 +27,13 @@ protected:
 	virtual void BeginPlay() override;
 
 	void Die();
+
 	bool InTargetRange(AActor* Target, double Radius) const;
+	void MoveToTarget(AActor* Target);
+	AActor* ChoosePatrolTarget();
+
+	UFUNCTION()
+	void PawnSeen(APawn* SeenPawn);	
 
 	void PlayHitReactMontage(const FName& SectionName);
 
@@ -46,15 +52,22 @@ private:
 	UPROPERTY(EditAnywhere, Category = "VFX")
 	TObjectPtr<UParticleSystem> HitParticles;
 
+	/*
+	* Components
+	*/
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UAttributeComponent> Attributes;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UHealthBarComponent> HealthBarWidgetComponent;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UPawnSensingComponent> PawnSensing;
 
 	UPROPERTY()
 	TObjectPtr<AActor> CombatTarget;
 	UPROPERTY(EditAnywhere)
 	double CombatRadius;
+	UPROPERTY(EditAnywhere)
+	double AttackRadius;
 
 	/*
 	* Navigation
@@ -65,9 +78,21 @@ private:
 	TArray<TObjectPtr<AActor>> PatrolTargets;
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
 	double PatrolRadius;
+	UPROPERTY(EditAnywhere, Category = "AI Navigation")
+	float PatrolWaitMin;
+	UPROPERTY(EditAnywhere, Category = "AI Navigation")
+	float PatrolWaitMax;
 	UPROPERTY()
-	TObjectPtr<class AAIController> EnemyController;
+	TObjectPtr<class AAIController> EnemyController;	
+	
+	FTimerHandle PatrolTimer;
+	void PatrolTimerFinished();
 
+	void CheckPatrolTarget();
+	void CheckCombatTarget();
+
+	EEnemyState EnemyState;
+	
 public:	
 	
 };
