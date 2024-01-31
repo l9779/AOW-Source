@@ -27,6 +27,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	void Die();
+	bool InTargetRange(AActor* Target, double Radius) const;
 
 	void PlayHitReactMontage(const FName& SectionName);
 
@@ -47,7 +48,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UAttributeComponent> Attributes;
-
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UHealthBarComponent> HealthBarWidgetComponent;
 
@@ -55,6 +55,18 @@ private:
 	TObjectPtr<AActor> CombatTarget;
 	UPROPERTY(EditAnywhere)
 	double CombatRadius;
+
+	/*
+	* Navigation
+	*/
+	UPROPERTY(EditInstanceOnly, Category = "AI Navigation")
+	TObjectPtr<AActor> PatrolTarget;
+	UPROPERTY(EditInstanceOnly, Category = "AI Navigation")
+	TArray<TObjectPtr<AActor>> PatrolTargets;
+	UPROPERTY(EditAnywhere, Category = "AI Navigation")
+	double PatrolRadius;
+	UPROPERTY()
+	TObjectPtr<class AAIController> EnemyController;
 
 public:	
 	

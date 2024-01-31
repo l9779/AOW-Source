@@ -130,6 +130,11 @@ void ASlashCharacter::EKeyPressed()
 		if (OverlappingWeapon->GetEquipState() == ECharacterState::ECS_EquippedTwoHandedWeapon)
 			SocketName = FName("GreatSwordSocket");
 
+		if (EquippedWeapon) 
+		{
+			// Unequip Function
+		}
+
 		OverlappingWeapon->Equip(GetMesh(), SocketName, this, this);
 		CharacterState = OverlappingWeapon->GetEquipState();
 		EquippedWeapon = OverlappingWeapon;
@@ -226,24 +231,22 @@ void ASlashCharacter::PlayAttackMontage()
 
 void ASlashCharacter::OrientAttackRotation(float DeltaTime)
 {
-	/* TODO
-	* If there's movement input at the baginning of attack make character direction attack to direction
-	* Like Batman Arkham games
-	*/
+	FRotator AttackRotation(FRotator::ZeroRotator);
+
 	if (InputX != 0.f || InputY != 0.f)
 	{
 		FVector InputDirection(InputY, InputX, 0.f);
 		FRotator InputRotator = UKismetMathLibrary::MakeRotationFromAxes(InputDirection, FVector::ZeroVector, FVector::ZeroVector);
 		FRotator DirectionRotator = UKismetMathLibrary::ComposeRotators(InputRotator, GetControlRotation());
-		SetActorRotation(FRotator(0.f, DirectionRotator.Yaw, 0.f));
+		AttackRotation = FRotator(0.f, DirectionRotator.Yaw, 0.f);
 	}
 	else
 	{
-		FRotator NewCharacterRotation = GetActorRotation();
-		NewCharacterRotation.Yaw = GetControlRotation().Yaw;
-		SetActorRotation(FMath::RInterpTo(GetActorRotation(), NewCharacterRotation, DeltaTime, 10.f));
+		AttackRotation = GetActorRotation();
+		AttackRotation.Yaw = GetControlRotation().Yaw;
 	}
 
+	SetActorRotation(FMath::RInterpTo(GetActorRotation(), AttackRotation, DeltaTime, 10.f));
 }
 
 void ASlashCharacter::PlayEquipMontage(const FName& SectionName)

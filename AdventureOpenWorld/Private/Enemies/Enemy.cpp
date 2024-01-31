@@ -6,10 +6,12 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/AttributeComponent.h"
 #include "HUD/HealthBarComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "AIController.h"
 
 AEnemy::AEnemy(): 
 	DeathPose(EDeathPose::EDP_Alive),
-	CombatRadius(500.f)
+	CombatRadius(500.f), PatrolRadius(200.f)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -25,6 +27,10 @@ AEnemy::AEnemy():
 	HealthBarWidgetComponent = CreateDefaultSubobject<UHealthBarComponent>(TEXT("Health Bar"));
 	HealthBarWidgetComponent->SetupAttachment(GetRootComponent());
 
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationRoll = false;
+	bUseControllerRotationYaw = false;
 }
 
 void AEnemy::BeginPlay()
@@ -33,19 +39,48 @@ void AEnemy::BeginPlay()
 	
 	if (HealthBarWidgetComponent) HealthBarWidgetComponent->SetVisibility(false);
 
+	EnemyController = Cast<AAIController>(GetController());
+
+	if (EnemyController && PatrolTarget)
+	{
+		FAIMoveRequest MoveRequest;
+		MoveRequest.SetGoalActor(PatrolTarget);
+		MoveRequest.SetAcceptanceRadius(10.f);
+		FNavPathSharedPtr NavPath;
+		EnemyController->MoveTo(MoveRequest, &NavPath);
+		TArray<FNavPathPoint>& PathPoints = NavPath->GetPathPoints();
+		for (auto& Point : PathPoints) DRAW_SPHERE(Point.Location, FColor::Green)
+	}
+
 }
 
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (CombatTarget &&
-		(CombatTarget->GetActorLocation() - GetActorLocation()).Size() > CombatRadius)
+	if (CombatTarget && !InTargetRange(CombatTarget, CombatRadius))
+	{
+		CombatTarget = nullptr;
+		if (HealthBarWidgetComponent) HealthBarWidgetComponent->SetVisibility(false);
+	}
+
+	if (EnemyController && PatrolTarget && InTargetRange(PatrolTarget, PatrolRadius))
+	{
+		TArray<AActor*> ValidTargets;
+		for (AActor* Target : PatrolTargets)
+			if (Target != PatrolTarget) ValidTargets.AddUnique(Target);
+		
+		if (ValidTargets.Num() > 0)
 		{
-			CombatTarget = nullptr;
-			if (HealthBarWidgetComponent) HealthBarWidgetComponent->SetVisibility(false);
+			PatrolTarget = ValidTargets[FMath::RandRange(0, ValidTargets.Num() - 1)];
+
+			FAIMoveRequest MoveRequest;
+			MoveRequest.SetGoalActor(PatrolTarget);
+			MoveRequest.SetAcceptanceRadius(15.f);
+			EnemyController->MoveTo(MoveRequest);
 		}
 
+	}
 }
 
 void AEnemy::Die()
@@ -84,6 +119,13 @@ void AEnemy::Die()
 
 		AnimInstance->Montage_JumpToSection(SectionName, DeathMontage);
 	}
+}
+
+bool AEnemy::InTargetRange(AActor* Target, double Radius) const
+{
+	DRAW_SPHERE_SingleFrame(GetActorLocation(), FColor::Green);
+	DRAW_SPHERE_SingleFrame(Target->GetActorLocation(), FColor::Cyan);
+	return (Target->GetActorLocation() - GetActorLocation()).Size() <= Radius;
 }
 
 void AEnemy::PlayHitReactMontage(const FName& SectionName)
