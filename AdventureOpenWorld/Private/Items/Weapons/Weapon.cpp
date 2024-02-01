@@ -11,7 +11,6 @@ AWeapon::AWeapon():
 	Damage(20.f),
 	EquipState(ECharacterState::ECS_EquippedOneHandedWeapon)
 {
-
 	WeaponBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Weapon Box"));
 	WeaponBox->SetupAttachment(GetRootComponent());
 	WeaponBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -57,6 +56,18 @@ void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocke
 		InSocketName
 	);
 
+}
+
+void AWeapon::Unequip()
+{
+	SetOwner(nullptr);
+	SetInstigator(nullptr);
+
+	ItemMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+
+	ItemState = EItemState::EIS_Hovering;
+
+	if (Sphere) Sphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

@@ -5,17 +5,15 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "GroomComponent.h"
+#include "Components/AttributeComponent.h"
 #include "Items/Item.h"
 #include "Items/Weapons/Weapon.h"
 #include "Animation/AnimInstance.h"
-#include "Components/BoxComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
-/*
-* FIX GREATSWORD UNEQUIP
-*/
-
-ASlashCharacter::ASlashCharacter()
+ASlashCharacter::ASlashCharacter():
+	CharacterState(ECharacterState::ECS_Unequipped),
+	ActionState(EActionState::EAS_Unoccupied)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -53,6 +51,8 @@ void ASlashCharacter::BeginPlay()
 			Subsystem->AddMappingContext(SlashMappingContext, 0);
 
 	Tags.Add(FName("SlashCharacter"));
+
+	GetCharacterMovement()->MaxWalkSpeed = Attributes->GetRunSpeed();
 
 }
 
@@ -121,8 +121,8 @@ void ASlashCharacter::LookAround(const FInputActionValue& Value)
 
 void ASlashCharacter::Walk()
 {
-	if (WalkMode) GetCharacterMovement()->MaxWalkSpeed = JogSpeed;
-	else GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	if (WalkMode) GetCharacterMovement()->MaxWalkSpeed = Attributes->GetRunSpeed();
+	else GetCharacterMovement()->MaxWalkSpeed = Attributes->GetWalkSpeed();
 
 	WalkMode = !WalkMode;
 }
@@ -131,17 +131,9 @@ void ASlashCharacter::EKeyPressed()
 {
 	if (AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem))
 	{
-		FName SocketName("OneHandSwordSocket");
+		if (EquippedWeapon) EquippedWeapon->Unequip();
 
-		if (OverlappingWeapon->GetEquipState() == ECharacterState::ECS_EquippedTwoHandedWeapon)
-			SocketName = FName("GreatSwordSocket");
-
-		if (EquippedWeapon) 
-		{
-			// Unequip Function
-		}
-
-		OverlappingWeapon->Equip(GetMesh(), SocketName, this, this);
+		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
 		CharacterState = OverlappingWeapon->GetEquipState();
 		EquippedWeapon = OverlappingWeapon;
 		OverlappingItem = nullptr;
@@ -158,14 +150,19 @@ void ASlashCharacter::EKeyPressed()
 	}
 	else if (CanArm())
 	{
-		FName SectionName("Equip");
-
-		if (EquippedWeapon->GetEquipState() == ECharacterState::ECS_EquippedTwoHandedWeapon)
-			SectionName = FName("EquipGreatSword");
-
-		PlayEquipMontage(SectionName);
-		CharacterState = OverlappingWeapon->GetEquipState();
+		EquipWeapon();
 	}
+}
+
+void ASlashCharacter::EquipWeapon()
+{
+	FName SectionName("Equip");
+
+	if (EquippedWeapon->GetEquipState() == ECharacterState::ECS_EquippedTwoHandedWeapon)
+		SectionName = FName("EquipGreatSword");
+
+	PlayEquipMontage(SectionName);
+	CharacterState = EquippedWeapon->GetEquipState();
 }
 
 void ASlashCharacter::Attack()
@@ -174,6 +171,10 @@ void ASlashCharacter::Attack()
 	{
 		PlayAttackMontage();
 		ActionState = EActionState::EAS_Attacking;
+	} 
+	else if (CanArm())
+	{
+		EquipWeapon();
 	}
 }
 
@@ -282,15 +283,6 @@ void ASlashCharacter::ANCB_Arm()
 {
 	EquippedWeapon->AttachMeshToSocket(GetMesh(), FName("RightHandSocket"));
 	ActionState = EActionState::EAS_Unoccupied;
-}
-
-void ASlashCharacter::ANCB_SetWeaponBoxCollisionEnabled(ECollisionEnabled::Type CollisionEnabled)
-{
-	if (EquippedWeapon && EquippedWeapon->GetWeaponBox())
-	{
-		EquippedWeapon->GetWeaponBox()->SetCollisionEnabled(CollisionEnabled);
-		EquippedWeapon->ClearIgnoreActors();
-	}
 }
 
 void ASlashCharacter::ANCB_SetDirectionAttack(bool b)

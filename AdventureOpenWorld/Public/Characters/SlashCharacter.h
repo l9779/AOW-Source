@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "Characters/BaseCharacter.h"
 #include "InputActionValue.h"
 #include "CharacterTypes.h"
 #include "SlashCharacter.generated.h"
@@ -13,10 +13,9 @@ class UCameraComponent;
 class UGroomComponent;
 class AItem;
 class UAnimMontage;
-class AWeapon;
 
 UCLASS()
-class ADVENTUREOPENWORLD_API ASlashCharacter : public ACharacter
+class ADVENTUREOPENWORLD_API ASlashCharacter : public ABaseCharacter
 {
 	GENERATED_BODY()
 
@@ -25,6 +24,8 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -45,72 +46,58 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> AttackAction;
 
-	/*
-	* Animation Montages
-	*/
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	TObjectPtr<UAnimMontage> OneHandSwordAttackMontage;
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	TObjectPtr<UAnimMontage> GreatSwordAttackMontage;
+	/* Animation Montages */
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	TObjectPtr<UAnimMontage> EquipMontage;
 
-	/*
-	* Input callbacks
-	*/
+	/* Input callbacks */
 	void Movement(const FInputActionValue& Value);
 	void ClearMovement(const FInputActionValue& Value);
 	void LookAround(const FInputActionValue& Value);
 	void Walk();
 	void EKeyPressed();
-	void Attack();
+	virtual void Attack() override;
 
-	/*
-	* Play Montage Functions
-	*/
-	void PlayAttackMontage();
-	void OrientAttackRotation(float DeltaTime);
+	/* Play Montage Functions */
+	virtual void PlayAttackMontage() override;
 	void PlayEquipMontage(const FName& SectionName);
 	
-	/*
-	*  AnimNotify callbacks
-	*/
-	UFUNCTION(BlueprintCallable)
-	void ANCB_AttackEnd();
+	/* AnimNotify callbacks */
+	virtual void ANCB_AttackEnd() override;
 	UFUNCTION(BlueprintCallable)
 	void ANCB_Disarm();
 	UFUNCTION(BlueprintCallable)
 	void ANCB_Arm();
 	UFUNCTION(BlueprintCallable)
-	void ANCB_SetWeaponBoxCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
-	UFUNCTION(BlueprintCallable)
 	void ANCB_SetDirectionAttack(bool b);
 
-	bool CanAttack() const;
+	void OrientAttackRotation(float DeltaTime);
+	void EquipWeapon();
+
+	virtual bool CanAttack() const override;
 	bool CanDisarm() const;
 	bool CanArm() const;
-	
+
+	/* End of Protected */
 private:	
-	/*
-	* Dev Only
-	*/
+	/* Dev Only */
 	UPROPERTY(EditAnywhere, Category = "Development Only Settings", meta = (AllowPrivateAccess = "true"))
 	bool AttackMontageOvewrite = false;
 	UPROPERTY(EditAnywhere, Category = "Development Only Settings", meta = (AllowPrivateAccess = "true"))
 	FName AttackSectionName = FName("");
 	
-	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
-	/* Set by anim notify */
-	bool OrientAttackToRotation = false;
-
+	/* Set by state of equipped weapon */
+	ECharacterState CharacterState;
+	/* Set by input callback */
 	bool WalkMode = false;
-	UPROPERTY(EditAnywhere, Category = Movement)
-	float WalkSpeed = 300.f;
-	UPROPERTY(EditAnywhere, Category = Movement)
-	float JogSpeed = 600.f;
-
+	/* Set by anim notify at the beginnig of attack animation */
+	bool OrientAttackToRotation = false;
+	/* Set by pressing movement inputs, to orient attack rotation */
+	float InputY = 0.f;
+	float InputX = 0.f;
+	/* Set by different action character can peform(equipping weapon, attacks, unnocupied) */
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	EActionState ActionState = EActionState::EAS_Unoccupied;
+	EActionState ActionState;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> SpringArm;
@@ -125,12 +112,7 @@ private:
 	UPROPERTY(VisibleInstanceOnly)
 	TObjectPtr<AItem> OverlappingItem;
 
-	UPROPERTY(VisibleAnywhere, Category = Weapon)
-	TObjectPtr<AWeapon> EquippedWeapon;
-
-	float InputY = 0.f;
-	float InputX = 0.f;
-
+	/* End of Private */
 public:
 	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
 

@@ -16,6 +16,7 @@ public:
 	AWeapon();
 
 	void Equip(USceneComponent* InParent, FName InSocketName, AActor* NewOwner, APawn* NewInstigator);
+	void Unequip();
 	void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName);
 
 	FORCEINLINE void ClearIgnoreActors() { IgnoreActors.Empty(); }
