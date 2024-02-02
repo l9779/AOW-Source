@@ -80,6 +80,10 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	}
 }
 
+void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint)
+{
+}
+
 void ASlashCharacter::Movement(const FInputActionValue& Value)
 {
 	if (ActionState == EActionState::EAS_Attacking) return;
@@ -207,10 +211,7 @@ void ASlashCharacter::PlayAttackMontage()
 
 	if (AttackMontage && AnimInstance)
 	{
-		AnimInstance->Montage_Play(AttackMontage);
-
 		FName SectionName = FName();
-		
 		switch (int32 Selection = FMath::RandRange(0, 3))
 		{
 		case (0):
@@ -232,6 +233,7 @@ void ASlashCharacter::PlayAttackMontage()
 		// !! Development only !!
 		if (AttackMontageOvewrite) SectionName = AttackSectionName;
 
+		AnimInstance->Montage_Play(AttackMontage);
 		AnimInstance->Montage_JumpToSection(SectionName, AttackMontage);
 	}
 }

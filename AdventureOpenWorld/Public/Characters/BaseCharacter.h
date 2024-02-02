@@ -16,9 +16,7 @@ public:
 	ABaseCharacter();
 	virtual void Tick(float DeltaTime) override;
 
-	/*
-	*  AnimNotify callbacks
-	*/
+	/**  AnimNotify callbacks */
 	UFUNCTION(BlueprintCallable)
 	void ANCB_SetWeaponBoxCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
 	UFUNCTION(BlueprintCallable)
@@ -30,19 +28,21 @@ protected:
 	virtual void Attack();
 	virtual void Die();
 	void DirectionalHitReact(const FVector& ImpactPoint);
+	void PlayHitSound(const FVector& ImpactPoint);
+	void SpawnHitParticles(const FVector& ImpactPoint);
+	virtual void HandleDamage(float DamageAmount);
 
-	/*
-	* Play Montage Functions
-	*/
+	/** Play Montage Functions */
 	virtual void PlayAttackMontage();
 	void PlayHitReactMontage(const FName& SectionName);
 
 
 	virtual bool CanAttack() const;
+	bool IsAlive() const;
 
-	/*
-	* Animation Montages
-	*/
+	/** Animation Montages */
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	TObjectPtr<UAnimMontage> OneHandAxeAttackMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	TObjectPtr<UAnimMontage> OneHandSwordAttackMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
@@ -55,13 +55,21 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	TObjectPtr<AWeapon> EquippedWeapon;
 
-	/*
-	* Components
-	*/
+	/** Components */
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<class UAttributeComponent> Attributes;
-	UPROPERTY(EditAnywhere, Category = "Components")
+	
+
+	/* Dev Only */
+	UPROPERTY(EditAnywhere, Category = "Development Only Settings", meta = (AllowPrivateAccess = "true"))
+	bool AttackMontageOvewrite = false;
+	UPROPERTY(EditAnywhere, Category = "Development Only Settings", meta = (AllowPrivateAccess = "true"))
+	FName AttackSectionName = FName("");
+
+	/* End of Protected */
+private:
+	UPROPERTY(EditAnywhere, Category = "Combat Assets")
 	TObjectPtr<USoundBase> HitSound;
-	UPROPERTY(EditAnywhere, Category = "Components")
+	UPROPERTY(EditAnywhere, Category = "Combat Assets")
 	TObjectPtr<UParticleSystem> HitParticles;
 };

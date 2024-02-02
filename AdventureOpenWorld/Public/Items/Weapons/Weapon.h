@@ -15,7 +15,7 @@ class ADVENTUREOPENWORLD_API AWeapon : public AItem
 public:
 	AWeapon();
 
-	void Equip(USceneComponent* InParent, FName InSocketName, AActor* NewOwner, APawn* NewInstigator);
+	void Equip(USceneComponent* InParent, FName InSocketName, AActor* NewOwner, APawn* NewInstigator, bool bPlaySound = true);
 	void Unequip();
 	void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName);
 

@@ -79,13 +79,7 @@ protected:
 	bool CanArm() const;
 
 	/* End of Protected */
-private:	
-	/* Dev Only */
-	UPROPERTY(EditAnywhere, Category = "Development Only Settings", meta = (AllowPrivateAccess = "true"))
-	bool AttackMontageOvewrite = false;
-	UPROPERTY(EditAnywhere, Category = "Development Only Settings", meta = (AllowPrivateAccess = "true"))
-	FName AttackSectionName = FName("");
-	
+private:		
 	/* Set by state of equipped weapon */
 	ECharacterState CharacterState;
 	/* Set by input callback */
