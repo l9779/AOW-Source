@@ -8,7 +8,6 @@
 #include "Components/AttributeComponent.h"
 #include "Items/Item.h"
 #include "Items/Weapons/Weapon.h"
-#include "Animation/AnimInstance.h"
 #include "Kismet/KismetMathLibrary.h"
 
 ASlashCharacter::ASlashCharacter():
@@ -125,8 +124,10 @@ void ASlashCharacter::LookAround(const FInputActionValue& Value)
 
 void ASlashCharacter::Walk()
 {
-	if (WalkMode) GetCharacterMovement()->MaxWalkSpeed = Attributes->GetRunSpeed();
-	else GetCharacterMovement()->MaxWalkSpeed = Attributes->GetWalkSpeed();
+	if (WalkMode)
+		GetCharacterMovement()->MaxWalkSpeed = Attributes->GetRunSpeed();
+	else 
+		GetCharacterMovement()->MaxWalkSpeed = Attributes->GetWalkSpeed();
 
 	WalkMode = !WalkMode;
 }
@@ -134,39 +135,11 @@ void ASlashCharacter::Walk()
 void ASlashCharacter::EKeyPressed()
 {
 	if (AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem))
-	{
-		if (EquippedWeapon) EquippedWeapon->Unequip();
-
-		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
-		CharacterState = OverlappingWeapon->GetEquipState();
-		EquippedWeapon = OverlappingWeapon;
-		OverlappingItem = nullptr;
-	} 
+		EquipWeapon(OverlappingWeapon);
 	else if (CanDisarm())
-	{
-		FName SectionName("Unequip");
-
-		if (EquippedWeapon->GetEquipState() == ECharacterState::ECS_EquippedTwoHandedWeapon)
-			SectionName = FName("UnequipGreatSword");
-
-		PlayEquipMontage(SectionName);
-		CharacterState = ECharacterState::ECS_Unequipped;
-	}
+		SheatWeapon();
 	else if (CanArm())
-	{
-		EquipWeapon();
-	}
-}
-
-void ASlashCharacter::EquipWeapon()
-{
-	FName SectionName("Equip");
-
-	if (EquippedWeapon->GetEquipState() == ECharacterState::ECS_EquippedTwoHandedWeapon)
-		SectionName = FName("EquipGreatSword");
-
-	PlayEquipMontage(SectionName);
-	CharacterState = EquippedWeapon->GetEquipState();
+		UnsheatWeapon();
 }
 
 void ASlashCharacter::Attack()
@@ -178,7 +151,7 @@ void ASlashCharacter::Attack()
 	} 
 	else if (CanArm())
 	{
-		EquipWeapon();
+		UnsheatWeapon();
 	}
 }
 
@@ -186,56 +159,6 @@ bool ASlashCharacter::CanAttack() const
 {
 	return ActionState == EActionState::EAS_Unoccupied &&
 		CharacterState != ECharacterState::ECS_Unequipped;
-}
-
-bool ASlashCharacter::CanDisarm() const
-{
-	return ActionState == EActionState::EAS_Unoccupied &&
-		CharacterState != ECharacterState::ECS_Unequipped;
-}
-
-bool ASlashCharacter::CanArm() const
-{
-	return ActionState == EActionState::EAS_Unoccupied &&
-		CharacterState == ECharacterState::ECS_Unequipped &&
-		EquippedWeapon;
-}
-
-void ASlashCharacter::PlayAttackMontage()
-{
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	UAnimMontage* AttackMontage = OneHandSwordAttackMontage;
-
-	if (EquippedWeapon->GetEquipState() == ECharacterState::ECS_EquippedTwoHandedWeapon)
-		AttackMontage = GreatSwordAttackMontage;
-
-	if (AttackMontage && AnimInstance)
-	{
-		FName SectionName = FName();
-		switch (int32 Selection = FMath::RandRange(0, 3))
-		{
-		case (0):
-			SectionName = FName("Attack1");
-			break;
-		case (1):
-			SectionName = FName("Attack2");
-			break;
-		case (2):
-			SectionName = FName("Attack3");
-			break;
-		case (3):
-			SectionName = FName("Attack4");
-			break;
-		default:
-			break;
-		}
-
-		// !! Development only !!
-		if (AttackMontageOvewrite) SectionName = AttackSectionName;
-
-		AnimInstance->Montage_Play(AttackMontage);
-		AnimInstance->Montage_JumpToSection(SectionName, AttackMontage);
-	}
 }
 
 void ASlashCharacter::OrientAttackRotation(float DeltaTime)
@@ -258,16 +181,50 @@ void ASlashCharacter::OrientAttackRotation(float DeltaTime)
 	SetActorRotation(FMath::RInterpTo(GetActorRotation(), AttackRotation, DeltaTime, 10.f));
 }
 
-void ASlashCharacter::PlayEquipMontage(const FName& SectionName)
+void ASlashCharacter::UnsheatWeapon()
 {
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	FName SectionName("Equip");
+	if (EquippedWeapon->GetWeaponType() == EWeaponType::EWT_GreatSword)
+		SectionName = FName("EquipGreatSword");
 
-	if (EquipMontage && AnimInstance) 
-	{
-		AnimInstance->Montage_Play(EquipMontage);
-		AnimInstance->Montage_JumpToSection(SectionName, EquipMontage);
-		ActionState = EActionState::EAS_EquippingWeapon;
-	}
+	PlayMontageSection(EquipMontage, SectionName);
+	ActionState = EActionState::EAS_EquippingWeapon;
+	SetCharacterStateOnWeapon();
+}
+
+void ASlashCharacter::SheatWeapon()
+{
+	FName SectionName("Unequip");
+	if (EquippedWeapon->GetWeaponType() == EWeaponType::EWT_GreatSword)
+		SectionName = FName("UnequipGreatSword");
+
+	PlayMontageSection(EquipMontage, SectionName);
+	ActionState = EActionState::EAS_EquippingWeapon;
+	CharacterState = ECharacterState::ECS_Unequipped;
+}
+
+bool ASlashCharacter::CanDisarm() const
+{
+	return ActionState == EActionState::EAS_Unoccupied &&
+		CharacterState != ECharacterState::ECS_Unequipped;
+}
+
+bool ASlashCharacter::CanArm() const
+{
+	return ActionState == EActionState::EAS_Unoccupied &&
+		CharacterState == ECharacterState::ECS_Unequipped &&
+		EquippedWeapon;
+}
+
+void ASlashCharacter::EquipWeapon(AWeapon* Weapon)
+{
+	if (EquippedWeapon) EquippedWeapon->Unequip();
+
+	Weapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
+	EquippedWeapon = Weapon;
+	OverlappingItem = nullptr;
+
+	SetCharacterStateOnWeapon();
 }
 
 void ASlashCharacter::ANCB_AttackEnd()
@@ -275,13 +232,13 @@ void ASlashCharacter::ANCB_AttackEnd()
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
-void ASlashCharacter::ANCB_Disarm()
+void ASlashCharacter::ANCB_AttachWeaponToSheat()
 {
 	EquippedWeapon->AttachMeshToSocket(GetMesh(), FName("SpineSocket"));
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
-void ASlashCharacter::ANCB_Arm()
+void ASlashCharacter::ANCB_AttachWeaponToHand()
 {
 	EquippedWeapon->AttachMeshToSocket(GetMesh(), FName("RightHandSocket"));
 	ActionState = EActionState::EAS_Unoccupied;
@@ -290,4 +247,23 @@ void ASlashCharacter::ANCB_Arm()
 void ASlashCharacter::ANCB_SetDirectionAttack(bool b)
 {
 	OrientAttackToRotation = b;
+}
+
+void ASlashCharacter::SetCharacterStateOnWeapon()
+{
+	switch (EquippedWeapon->GetWeaponType())
+	{
+	case (EWeaponType::EWT_OneHandAxe):
+		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+		break;
+	case (EWeaponType::EWT_OneHandSword):
+		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+		break;
+	case (EWeaponType::EWT_GreatSword):
+		CharacterState = ECharacterState::ECS_EquippedTwoHandedWeapon;
+		break;
+	default:
+		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
+		break;
+	}
 }

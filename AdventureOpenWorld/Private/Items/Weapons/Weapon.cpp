@@ -8,8 +8,7 @@
 #include "NiagaraComponent.h"
 
 AWeapon::AWeapon(): 
-	Damage(20.f),
-	EquipState(ECharacterState::ECS_EquippedOneHandedWeapon)
+	Damage(20.f)
 {
 	WeaponBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Weapon Box"));
 	WeaponBox->SetupAttachment(GetRootComponent());

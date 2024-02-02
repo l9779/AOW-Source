@@ -7,6 +7,14 @@
 
 class UBoxComponent;
 
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+	EWT_OneHandSword UMETA(DisplayName = "One Hand Sword"),
+	EWT_GreatSword UMETA(DisplayName = "Great Sword"),
+	EWT_OneHandAxe UMETA(DisplayName = "One Hand Axe")
+};
+
 UCLASS()
 class ADVENTUREOPENWORLD_API AWeapon : public AItem
 {
@@ -41,7 +49,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	float Damage;
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
-	ECharacterState EquipState;
+	EWeaponType WeaponType;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USceneComponent> BoxTraceStart;
@@ -52,5 +60,5 @@ private:
 
 public:
 	FORCEINLINE TObjectPtr<UBoxComponent> GetWeaponBox() { return WeaponBox; }
-	FORCEINLINE ECharacterState GetEquipState() { return EquipState; }
+	FORCEINLINE EWeaponType GetWeaponType() { return WeaponType; }
 };

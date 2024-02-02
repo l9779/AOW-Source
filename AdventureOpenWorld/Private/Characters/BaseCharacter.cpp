@@ -1,5 +1,6 @@
 #include "Characters/BaseCharacter.h"
 #include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Items/Weapons/Weapon.h"
 #include "Components/AttributeComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -9,6 +10,8 @@ ABaseCharacter::ABaseCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 
 	Attributes = CreateDefaultSubobject<UAttributeComponent>(TEXT("Attributes"));
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 }
 
 void ABaseCharacter::BeginPlay()
@@ -67,8 +70,55 @@ void ABaseCharacter::HandleDamage(float DamageAmount)
 	if (Attributes) Attributes->ReceiveDamage(DamageAmount);
 }
 
-void ABaseCharacter::PlayAttackMontage()
+void ABaseCharacter::DisableCapsule()
 {
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void ABaseCharacter::PlayMontageSection(UAnimMontage* Montage, const FName& SectionName)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && Montage)
+	{
+		AnimInstance->Montage_Play(Montage);
+		AnimInstance->Montage_JumpToSection(SectionName, Montage);
+	}
+}
+
+int32 ABaseCharacter::PlayRandomMontageSection(UAnimMontage* Montage, const TArray<FName>& SectionNames)
+{
+	if (SectionNames.Num() <= 0) return -1;
+
+	const int32 Selection = FMath::RandRange(0, SectionNames.Num() - 1);
+	PlayMontageSection(Montage, SectionNames[Selection]);
+	return Selection;
+}
+
+int32 ABaseCharacter::PlayAttackMontage()
+{
+	UAnimMontage* AttackMontage;
+	switch (EquippedWeapon->GetWeaponType())
+	{
+	case (EWeaponType::EWT_OneHandAxe):
+		AttackMontage = OneHandAxeAttackMontage;
+		break;
+	case (EWeaponType::EWT_OneHandSword):
+		AttackMontage = OneHandSwordAttackMontage;
+		break;
+	case (EWeaponType::EWT_GreatSword):
+		AttackMontage = GreatSwordAttackMontage;
+		break;
+	default:
+		AttackMontage = OneHandSwordAttackMontage;
+		break;
+	}
+
+	return PlayRandomMontageSection(AttackMontage, AttackMontageSections);
+}
+
+int32 ABaseCharacter::PlayDeathMontage()
+{
+	return PlayRandomMontageSection(DeathMontage, DeathMontageSections);
 }
 
 void ABaseCharacter::PlayHitReactMontage(const FName& SectionName)
