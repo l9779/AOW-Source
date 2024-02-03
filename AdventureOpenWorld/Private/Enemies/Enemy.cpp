@@ -35,6 +35,14 @@ AEnemy::AEnemy():
 
 }
 
+void AEnemy::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	if (PawnSensing) PawnSensing->OnSeePawn.AddDynamic(this, &AEnemy::PawnSeen);
+
+	InitializeEnemy();
+}
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -73,15 +81,6 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
 
 	PlayHitSound(ImpactPoint);
 	SpawnHitParticles(ImpactPoint);
-}
-
-void AEnemy::BeginPlay()
-{
-	Super::BeginPlay();
-	
-	if (PawnSensing) PawnSensing->OnSeePawn.AddDynamic(this, &AEnemy::PawnSeen);
-
-	InitializeEnemy();
 }
 
 void AEnemy::Die()
@@ -138,6 +137,7 @@ void AEnemy::InitializeEnemy()
 	HideHealthBar();
 	MoveToTarget(PatrolTarget);
 	SpawnDefaultWeapon();
+	Tags.Add(FName("Enemy"));
 }
 
 void AEnemy::SpawnDefaultWeapon()
@@ -302,7 +302,7 @@ void AEnemy::PawnSeen(APawn* SeenPawn)
 		EnemyState != EEnemyState::EES_Dead &&
 		EnemyState != EEnemyState::EES_Chasing &&
 		EnemyState < EEnemyState::EES_Attacking &&
-		SeenPawn->ActorHasTag(FName("SlashCharacter"));
+		SeenPawn->ActorHasTag(FName("EngageableTarget"));
 
 	if (bShouldChaseTarget)
 	{

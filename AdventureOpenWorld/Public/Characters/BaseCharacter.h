@@ -50,9 +50,9 @@ protected:
 
 	/* End of Protected */
 private:
-	UPROPERTY(EditAnywhere, Category = "Combat Assets")
+	UPROPERTY(EditAnywhere, Category = "Combat")
 	TObjectPtr<USoundBase> HitSound;
-	UPROPERTY(EditAnywhere, Category = "Combat Assets")
+	UPROPERTY(EditAnywhere, Category = "Combat")
 	TObjectPtr<UParticleSystem> HitParticles;
 
 	/** Animation Montages */
