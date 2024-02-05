@@ -104,7 +104,7 @@ bool AWeapon::HitActorIsSameType(AActor* OtherActor)
 void AWeapon::ExecuteGetHit(FHitResult& OutBoxHit)
 {
 	if (IHitInterface* HitInterface = Cast<IHitInterface>(OutBoxHit.GetActor()))
-		HitInterface->Execute_GetHit(OutBoxHit.GetActor(), OutBoxHit.ImpactPoint);
+		HitInterface->Execute_GetHit(OutBoxHit.GetActor(), OutBoxHit.ImpactPoint, GetOwner());
 }
 
 void AWeapon::BoxTrace(FHitResult& OutBoxHit)

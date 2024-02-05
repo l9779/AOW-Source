@@ -25,5 +25,5 @@ public:
 	// Function implementable on blueprint, to implement on C++ use GetHit_Implementation
 	// To Execute on C++ use Execute_GetHit()
 	UFUNCTION(BlueprintNativeEvent) 
-	void GetHit(const FVector& ImpactPoint);
+	void GetHit(const FVector& ImpactPoint, AActor* Hitter);
 };

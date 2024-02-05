@@ -25,7 +25,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	virtual void GetHit_Implementation(const FVector& ImpactPoint) override; /** <IHitInterface/> */
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override; /** <IHitInterface/> */
 
 protected:
 	virtual void BeginPlay() override;
@@ -55,6 +55,8 @@ protected:
 	void ANCB_AttachWeaponToHand();
 	UFUNCTION(BlueprintCallable)
 	void ANCB_SetDirectionAttack(bool b);
+	UFUNCTION(BlueprintCallable)
+	void ANCB_HitReactEnd();
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputMappingContext> SlashMappingContext;	

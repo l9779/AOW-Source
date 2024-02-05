@@ -19,7 +19,7 @@ public:
 	virtual void Destroyed() override;
 	/** </AActor> */
 
-	virtual void GetHit_Implementation(const FVector& ImpactPoint) override; 	/** <IHitInterface/> */
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override; 	/** <IHitInterface/> */
 
 	/* End of Public */
 protected:
@@ -76,8 +76,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AWeapon> WeaponClass;
 
-	UPROPERTY()
-	TObjectPtr<AActor> CombatTarget;
 	UPROPERTY(EditAnywhere)
 	double CombatRadius;
 	UPROPERTY(EditAnywhere)

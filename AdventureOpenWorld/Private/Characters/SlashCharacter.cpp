@@ -85,10 +85,11 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	}
 }
 
-void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint)
+void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 {
-	PlayHitSound(ImpactPoint);
-	SpawnHitParticles(ImpactPoint);
+	Super::GetHit_Implementation(ImpactPoint, Hitter);
+
+	ActionState = EActionState::EAS_HitReaction;
 }
 
 void ASlashCharacter::Movement(const FInputActionValue& Value)
@@ -255,6 +256,11 @@ void ASlashCharacter::ANCB_AttachWeaponToHand()
 void ASlashCharacter::ANCB_SetDirectionAttack(bool b)
 {
 	OrientAttackToRotation = b;
+}
+
+void ASlashCharacter::ANCB_HitReactEnd()
+{
+	ActionState = EActionState::EAS_Unoccupied;
 }
 
 void ASlashCharacter::SetCharacterStateOnWeapon()

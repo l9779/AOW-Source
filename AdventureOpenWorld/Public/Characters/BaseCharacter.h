@@ -20,6 +20,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	/** Combat Functions */
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override; /** <IHitInterface/> */
 	virtual void Attack();
 	virtual void Die();
 	void DirectionalHitReact(const FVector& ImpactPoint);
@@ -36,6 +37,14 @@ protected:
 	virtual int32 PlayAttackMontage();
 	virtual int32 PlayDeathMontage();
 	void PlayHitReactMontage(const FName& SectionName);	
+	void StopAttackMontage();
+
+	/* < Called on BP_Enemy Tick > */
+	UFUNCTION(BlueprintCallable)
+	FVector GetTranslationWarpTarget();
+	UFUNCTION(BlueprintCallable) 
+	FVector GetRotationWarpTarget();
+	/* </ Called on BP_Enemy Tick > */
 
 	/**  AnimNotify callbacks */
 	UFUNCTION(BlueprintCallable)
@@ -43,10 +52,18 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void ANCB_SetWeaponBoxCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
 
+
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	TObjectPtr<AActor> CombatTarget;
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	double WarpTargetDistance;
+
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	TObjectPtr<AWeapon> EquippedWeapon;
+
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<class UAttributeComponent> Attributes;
+
 
 	/* End of Protected */
 private:

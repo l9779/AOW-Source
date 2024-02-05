@@ -60,7 +60,11 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 {
 	HandleDamage(DamageAmount);
 	CombatTarget = EventInstigator->GetPawn();
-	ChaseTarget();
+
+	if (IsInsideAttackRadius()) 
+		EnemyState = EEnemyState::EES_Attacking;
+	else if (IsOutsideAttackRadius()) 
+		ChaseTarget();
 
 	return DamageAmount;
 }
@@ -70,17 +74,14 @@ void AEnemy::Destroyed()
 	if (EquippedWeapon) EquippedWeapon->Destroy();
 }
 
-void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
+void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 {
-	ShowHealthBar();
+	Super::GetHit_Implementation(ImpactPoint, Hitter);
 
-	if (IsAlive())
-		DirectionalHitReact(ImpactPoint);
-	else
-		Die();
-
-	PlayHitSound(ImpactPoint);
-	SpawnHitParticles(ImpactPoint);
+	ClearPatrolTimer();
+	ClearAttackTimer();
+	StopAttackMontage();
+	if (!IsDead()) ShowHealthBar();
 }
 
 void AEnemy::Die()
@@ -166,11 +167,13 @@ void AEnemy::CheckCombatTarget()
 	{
 		ClearAttackTimer();
 		LoseInterest();
+
 		if (!IsEngaged()) StartPatrolling();
 	}
 	else if (IsOutsideAttackRadius() && !IsChasing())
 	{
 		ClearAttackTimer();
+
 		if (!IsEngaged()) ChaseTarget();
 	}
 	else if (CanAttack())

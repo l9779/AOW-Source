@@ -5,7 +5,8 @@
 #include "Components/AttributeComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-ABaseCharacter::ABaseCharacter()
+ABaseCharacter::ABaseCharacter():
+	WarpTargetDistance(75.f)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -17,6 +18,18 @@ ABaseCharacter::ABaseCharacter()
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
+{
+	if (IsAlive() && Hitter)
+		DirectionalHitReact(Hitter->GetActorLocation());
+	else
+		Die();
+
+	ANCB_SetWeaponBoxCollisionEnabled(ECollisionEnabled::NoCollision);
+	PlayHitSound(ImpactPoint);
+	SpawnHitParticles(ImpactPoint);
 }
 
 void ABaseCharacter::Attack()
@@ -130,6 +143,38 @@ void ABaseCharacter::PlayHitReactMontage(const FName& SectionName)
 		AnimInstance->Montage_JumpToSection(SectionName, HitReactMontage);
 	}
 }
+
+void ABaseCharacter::StopAttackMontage()
+{
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	{
+		AnimInstance->Montage_Stop(.25f, OneHandAxeAttackMontage);
+		AnimInstance->Montage_Stop(.25f, OneHandSwordAttackMontage);
+		AnimInstance->Montage_Stop(.25f, GreatSwordAttackMontage);
+	}
+}
+
+/* < Called on BP_Enemy Tick > */
+FVector ABaseCharacter::GetTranslationWarpTarget()
+{
+	if (!CombatTarget) return FVector();
+
+	const FVector& CombatTargetLocation = CombatTarget->GetActorLocation();
+	const FVector& Location = GetActorLocation();
+
+	FVector TargetToMe = (Location - CombatTargetLocation).GetSafeNormal();
+	TargetToMe *= WarpTargetDistance;
+
+	return CombatTargetLocation + TargetToMe;
+}
+
+FVector ABaseCharacter::GetRotationWarpTarget()
+{
+	if (CombatTarget) return CombatTarget->GetActorLocation();
+
+	return FVector();
+}
+/* < /Called on BP_Enemy Tick > */
 
 bool ABaseCharacter::CanAttack() const
 {
