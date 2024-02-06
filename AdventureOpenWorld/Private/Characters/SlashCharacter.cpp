@@ -9,6 +9,8 @@
 #include "Items/Item.h"
 #include "Items/Weapons/Weapon.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "HUD/SlashHUD.h"
+#include "HUD/SlashOverlay.h"
 
 ASlashCharacter::ASlashCharacter():
 	CharacterState(ECharacterState::ECS_Unequipped),
@@ -52,12 +54,16 @@ void ASlashCharacter::BeginPlay()
 	Super::BeginPlay();
 	
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	{
+		InitializeSlashOverlay(PlayerController);
+
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 			Subsystem->AddMappingContext(SlashMappingContext, 0);
+	}
 
 	Tags.Add(FName("EngageableTarget"));
 
-	GetCharacterMovement()->MaxWalkSpeed = Attributes->GetRunSpeed();
+	if (Attributes) GetCharacterMovement()->MaxWalkSpeed = Attributes->GetRunSpeed();
 
 }
 
@@ -66,7 +72,6 @@ void ASlashCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	if (OrientAttackToRotation) OrientAttackRotation(DeltaTime);
-
 }
 
 void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -82,7 +87,15 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &ASlashCharacter::EKeyPressed);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ASlashCharacter::Attack);
 		EnhancedInputComponent->BindAction(WalkAction, ETriggerEvent::Started, this, &ASlashCharacter::Walk);
+		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::Started, this, &ASlashCharacter::LeftShiftPressed);
+		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::None, this, &ASlashCharacter::LeftShiftReleased);
 	}
+}
+
+float ASlashCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	HandleDamage(DamageAmount);
+	return DamageAmount;
 }
 
 void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
@@ -155,13 +168,23 @@ void ASlashCharacter::Attack()
 {
 	if (CanAttack())
 	{
-		PlayAttackMontage();
+		PlayAttackMontage(HoldingHeavyAttack);
 		ActionState = EActionState::EAS_Attacking;
 	} 
 	else if (CanArm())
 	{
 		UnsheatWeapon();
 	}
+}
+
+void ASlashCharacter::LeftShiftPressed()
+{
+	HoldingHeavyAttack = true;
+}
+
+void ASlashCharacter::LeftShiftReleased()
+{
+	HoldingHeavyAttack = false;
 }
 
 bool ASlashCharacter::CanAttack() const
@@ -279,5 +302,15 @@ void ASlashCharacter::SetCharacterStateOnWeapon()
 	default:
 		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
 		break;
+	}
+}
+
+void ASlashCharacter::InitializeSlashOverlay(APlayerController* PlayerController)
+{
+	if (ASlashHUD* SlashHUD = Cast<ASlashHUD>(PlayerController->GetHUD()))
+	{
+		SlashOverlay = SlashHUD->GetSlashOverlay();
+		if (SlashOverlay && Attributes)
+			SlashOverlay->SetAllOverlayValues(0, 0, Attributes->GetHealthPercent());
 	}
 }

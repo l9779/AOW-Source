@@ -107,9 +107,14 @@ int32 ABaseCharacter::PlayRandomMontageSection(UAnimMontage* Montage, const TArr
 	return Selection;
 }
 
-int32 ABaseCharacter::PlayAttackMontage()
+int32 ABaseCharacter::PlayAttackMontage(bool bIsHeavyAttack)
 {
 	UAnimMontage* AttackMontage;
+
+	/** redo entirely combat system hopefully later */
+	if (bIsHeavyAttack)
+		return PlayRandomMontageSection(HeavyAttackMontage, HeavyAttackMontageSections);
+
 	switch (EquippedWeapon->GetWeaponType())
 	{
 	case (EWeaponType::EWT_OneHandAxe):

@@ -43,6 +43,7 @@ void AEnemy::BeginPlay()
 
 	InitializeEnemy();
 }
+
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -60,6 +61,9 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 {
 	HandleDamage(DamageAmount);
 	CombatTarget = EventInstigator->GetPawn();
+
+	if (Cast<ABaseCharacter>(CombatTarget)) 
+		Cast<ABaseCharacter>(CombatTarget)->SetCombatTarget(this);
 
 	if (IsInsideAttackRadius()) 
 		EnemyState = EEnemyState::EES_Attacking;
@@ -81,11 +85,15 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 	ClearPatrolTimer();
 	ClearAttackTimer();
 	StopAttackMontage();
+
 	if (!IsDead()) ShowHealthBar();
 }
 
 void AEnemy::Die()
 {
+	if (Cast<ABaseCharacter>(CombatTarget))
+		Cast<ABaseCharacter>(CombatTarget)->SetCombatTarget(nullptr);
+
 	EnemyState = EEnemyState::EES_Dead;
 	ClearAttackTimer();
 	HideHealthBar();

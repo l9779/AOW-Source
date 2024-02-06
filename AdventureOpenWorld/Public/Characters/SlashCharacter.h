@@ -24,7 +24,7 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override; /** <IHitInterface/> */
 
 protected:
@@ -37,6 +37,8 @@ protected:
 	void Walk();
 	void EKeyPressed();
 	virtual void Attack() override; /** <ABaseCharacter/> */
+	void LeftShiftPressed();
+	void LeftShiftReleased();
 	
 	/** Weapon and Combat Functions */
 	virtual bool CanAttack() const override; /** <ABaseCharacter/> */
@@ -72,10 +74,21 @@ protected:
 	TObjectPtr<UInputAction> EquipAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> AttackAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> HeavyAttackAction;
+
+	/** Input Variables  */
+	bool HoldingHeavyAttack = false; /* Set by input callback */
+	bool WalkMode = false; /* Set by input callback */
+	bool OrientAttackToRotation = false; /* Set by anim notify at the beginnig of attack animation */
+	/* Set by pressing movement inputs, to orient attack rotation */
+	float InputY = 0.f;
+	float InputX = 0.f;
 
 	/* End of Protected */
 private:		
 	void SetCharacterStateOnWeapon();
+	void InitializeSlashOverlay(APlayerController* PlayerController);
 
 	/** Character Components */
 	UPROPERTY(VisibleAnywhere)
@@ -92,17 +105,14 @@ private:
 	TObjectPtr<UAnimMontage> EquipMontage;
 
 	ECharacterState CharacterState; /* Set by state of equipped weapon */
-	bool WalkMode = false; /* Set by input callback */
-	bool OrientAttackToRotation = false; /* Set by anim notify at the beginnig of attack animation */
-	/* Set by pressing movement inputs, to orient attack rotation */
-	float InputY = 0.f;
-	float InputX = 0.f;
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	EActionState ActionState; /* Set by different action character can peform(equipping weapon, attacks, unnocupied) */
 	
 	UPROPERTY(VisibleInstanceOnly)
 	TObjectPtr<AItem> OverlappingItem;
+
+	TObjectPtr<class USlashOverlay> SlashOverlay;
 
 	/* End of Private */
 public:

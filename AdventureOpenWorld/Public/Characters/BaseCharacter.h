@@ -34,7 +34,7 @@ protected:
 	/** Play Montage Functions */
 	void PlayMontageSection(UAnimMontage* Montage, const FName& SectionName);
 	int32 PlayRandomMontageSection(UAnimMontage* Montage, const TArray<FName>& SectionNames);
-	virtual int32 PlayAttackMontage();
+	virtual int32 PlayAttackMontage(bool bIsHeavyAttack = false);
 	virtual int32 PlayDeathMontage();
 	void PlayHitReactMontage(const FName& SectionName);	
 	void StopAttackMontage();
@@ -80,6 +80,8 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	TObjectPtr<UAnimMontage> GreatSwordAttackMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	TObjectPtr<UAnimMontage> HeavyAttackMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	TObjectPtr<UAnimMontage> HitReactMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	TObjectPtr<UAnimMontage> DeathMontage;
@@ -87,7 +89,11 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	TArray<FName> AttackMontageSections;
 	UPROPERTY(EditAnywhere, Category = "Combat")
+	TArray<FName> HeavyAttackMontageSections;
+	UPROPERTY(EditAnywhere, Category = "Combat")
 	TArray<FName> DeathMontageSections;
 
 	/* End of Private */
+public:
+	FORCEINLINE void SetCombatTarget(AActor* Target) { CombatTarget = Target; }
 };
