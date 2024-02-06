@@ -62,7 +62,7 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 	HandleDamage(DamageAmount);
 	CombatTarget = EventInstigator->GetPawn();
 
-	if (Cast<ABaseCharacter>(CombatTarget)) 
+	if (CombatTarget->ActorHasTag(FName("PlayerCharacter")))
 		Cast<ABaseCharacter>(CombatTarget)->SetCombatTarget(this);
 
 	if (IsInsideAttackRadius()) 
@@ -91,7 +91,9 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 
 void AEnemy::Die()
 {
-	if (Cast<ABaseCharacter>(CombatTarget))
+	Super::Die();
+
+	if (CombatTarget->ActorHasTag(FName("PlayerCharacter")))
 		Cast<ABaseCharacter>(CombatTarget)->SetCombatTarget(nullptr);
 
 	EnemyState = EEnemyState::EES_Dead;
@@ -100,12 +102,14 @@ void AEnemy::Die()
 	DisableCapsule();
 	SetLifeSpan(DeathLifeSpan);
 	GetCharacterMovement()->bOrientRotationToMovement = false;
-	PlayDeathMontage();
 }
 
 void AEnemy::Attack()
 {
 	Super::Attack();
+
+	if (!CombatTarget) return;
+
 	EnemyState = EEnemyState::EES_Engaged;
 	PlayAttackMontage();
 }
@@ -127,16 +131,6 @@ void AEnemy::HandleDamage(float DamageAmount)
 
 	if (HealthBarWidgetComponent)
 		HealthBarWidgetComponent->SetHealthPercent(Attributes->GetHealthPercent());
-}
-
-int32 AEnemy::PlayDeathMontage()
-{
-	const int32 Selection = Super::PlayDeathMontage();
-
-	TEnumAsByte<EDeathPose> Pose(Selection);
-	if (Pose < EDeathPose::EDP_MAX) DeathPose = Pose;
-
-	return Selection;
 }
 
 void AEnemy::InitializeEnemy()
@@ -309,11 +303,13 @@ AActor* AEnemy::ChoosePatrolTarget()
 
 void AEnemy::PawnSeen(APawn* SeenPawn)
 {
+	if (SeenPawn->ActorHasTag(FName("Dead"))) return;
+
 	const bool bShouldChaseTarget =
-		EnemyState != EEnemyState::EES_Dead &&
-		EnemyState != EEnemyState::EES_Chasing &&
-		EnemyState < EEnemyState::EES_Attacking &&
-		SeenPawn->ActorHasTag(FName("EngageableTarget"));
+	EnemyState != EEnemyState::EES_Dead &&
+	EnemyState != EEnemyState::EES_Chasing &&
+	EnemyState < EEnemyState::EES_Attacking &&
+	SeenPawn->ActorHasTag(FName("EngageableTarget"));
 
 	if (bShouldChaseTarget)
 	{

@@ -62,6 +62,7 @@ void ASlashCharacter::BeginPlay()
 	}
 
 	Tags.Add(FName("EngageableTarget"));
+	Tags.Add(FName("PlayerCharacter"));
 
 	if (Attributes) GetCharacterMovement()->MaxWalkSpeed = Attributes->GetRunSpeed();
 
@@ -95,6 +96,8 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 float ASlashCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	HandleDamage(DamageAmount);
+	SetHUDHealth();
+
 	return DamageAmount;
 }
 
@@ -102,12 +105,14 @@ void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint, AActor* 
 {
 	Super::GetHit_Implementation(ImpactPoint, Hitter);
 
-	ActionState = EActionState::EAS_HitReaction;
+	if (Attributes && Attributes->GetHealthPercent() > 0.f) 
+		ActionState = EActionState::EAS_HitReaction;
 }
 
 void ASlashCharacter::Movement(const FInputActionValue& Value)
 {
-	if (ActionState == EActionState::EAS_Attacking) return;
+	// this can be impruved with a proper game over mechanic (Dettach from controller, etc)
+	if (ActionState == EActionState::EAS_Attacking || !IsAlive()) return;
 
 	const FVector2D InputDirection = Value.Get<FVector2D>();
 
@@ -162,6 +167,11 @@ void ASlashCharacter::EKeyPressed()
 		SheatWeapon();
 	else if (CanArm())
 		UnsheatWeapon();
+}
+
+void ASlashCharacter::Jump()
+{
+	if (IsUnoccupied()) Super::Jump();
 }
 
 void ASlashCharacter::Attack()
@@ -259,6 +269,14 @@ void ASlashCharacter::EquipWeapon(AWeapon* Weapon)
 	SetCharacterStateOnWeapon();
 }
 
+void ASlashCharacter::Die()
+{
+	Super::Die();
+
+	ActionState = EActionState::EAS_Dead;
+	DisableMeshCollision();
+}
+
 void ASlashCharacter::ANCB_AttackEnd()
 { 
 	ActionState = EActionState::EAS_Unoccupied;
@@ -284,6 +302,11 @@ void ASlashCharacter::ANCB_SetDirectionAttack(bool b)
 void ASlashCharacter::ANCB_HitReactEnd()
 {
 	ActionState = EActionState::EAS_Unoccupied;
+}
+
+bool ASlashCharacter::IsUnoccupied() const
+{
+	return ActionState == EActionState::EAS_Unoccupied;
 }
 
 void ASlashCharacter::SetCharacterStateOnWeapon()
@@ -313,4 +336,10 @@ void ASlashCharacter::InitializeSlashOverlay(APlayerController* PlayerController
 		if (SlashOverlay && Attributes)
 			SlashOverlay->SetAllOverlayValues(0, 0, Attributes->GetHealthPercent());
 	}
+}
+
+void ASlashCharacter::SetHUDHealth()
+{
+	if (SlashOverlay && Attributes)
+		SlashOverlay->SetHealthBarPercent(Attributes->GetHealthPercent());
 }

@@ -24,6 +24,7 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override; /** <IHitInterface/> */
 
@@ -36,12 +37,16 @@ protected:
 	void LookAround(const FInputActionValue& Value);
 	void Walk();
 	void EKeyPressed();
+	virtual void Jump() override; /** <ACharacter/> */
 	virtual void Attack() override; /** <ABaseCharacter/> */
 	void LeftShiftPressed();
 	void LeftShiftReleased();
 	
 	/** Weapon and Combat Functions */
-	virtual bool CanAttack() const override; /** <ABaseCharacter/> */
+	/** <ABaseCharacter> */
+	virtual bool CanAttack() const override; 
+	virtual void Die() override;
+	/** </ABaseCharacter> */
 	void OrientAttackRotation(float DeltaTime);
 	void UnsheatWeapon();
 	void SheatWeapon();
@@ -87,8 +92,10 @@ protected:
 
 	/* End of Protected */
 private:		
+	bool IsUnoccupied() const;
 	void SetCharacterStateOnWeapon();
 	void InitializeSlashOverlay(APlayerController* PlayerController);
+	void SetHUDHealth();
 
 	/** Character Components */
 	UPROPERTY(VisibleAnywhere)
@@ -119,4 +126,5 @@ public:
 	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
 
 	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }
+	FORCEINLINE EActionState GetActionState() const { return ActionState; }
 };

@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Characters/BaseCharacter.h"
-#include "Characters/CharacterTypes.h"
+//#include "Characters/CharacterTypes.h"
 #include "Enemy.generated.h"
 
 UCLASS()
@@ -31,11 +31,8 @@ protected:
 	virtual bool CanAttack() const override;
 	virtual void ANCB_AttackEnd() override;
 	virtual void HandleDamage(float DamageAmount) override;
-	virtual int32 PlayDeathMontage() override;
 	/** </ABaseCharacter> */
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TEnumAsByte<EDeathPose> DeathPose;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	EEnemyState EnemyState;
 

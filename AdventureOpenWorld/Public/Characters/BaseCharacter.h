@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/HitInterface.h"
+#include "Characters/CharacterTypes.h"
 #include "BaseCharacter.generated.h"
 
 class AWeapon;
@@ -25,11 +26,12 @@ protected:
 	virtual void Die();
 	void DirectionalHitReact(const FVector& ImpactPoint);
 	virtual void HandleDamage(float DamageAmount);
-	void DisableCapsule();
 	void PlayHitSound(const FVector& ImpactPoint);
 	void SpawnHitParticles(const FVector& ImpactPoint);
 	virtual bool CanAttack() const;
 	bool IsAlive() const;
+	void DisableCapsule();
+	void DisableMeshCollision(); 
 
 	/** Play Montage Functions */
 	void PlayMontageSection(UAnimMontage* Montage, const FName& SectionName);
@@ -52,7 +54,6 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void ANCB_SetWeaponBoxCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
 
-
 	UPROPERTY(BlueprintReadOnly, Category = "Combat")
 	TObjectPtr<AActor> CombatTarget;
 	UPROPERTY(EditAnywhere, Category = "Combat")
@@ -64,6 +65,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<class UAttributeComponent> Attributes;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TEnumAsByte<EDeathPose> DeathPose;
 
 	/* End of Protected */
 private:
@@ -96,4 +99,6 @@ private:
 	/* End of Private */
 public:
 	FORCEINLINE void SetCombatTarget(AActor* Target) { CombatTarget = Target; }
+
+	FORCEINLINE TEnumAsByte<EDeathPose> GetDeathPose() const { return DeathPose; }
 };

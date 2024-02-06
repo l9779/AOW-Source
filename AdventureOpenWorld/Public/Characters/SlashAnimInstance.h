@@ -23,6 +23,10 @@ public:
 	float GroundSpeed;
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool isFalling;
-	UPROPERTY(BlueprintReadOnly, Category = "Movement|Character State")
+	UPROPERTY(BlueprintReadOnly, Category = "Movement|Character States")
 	ECharacterState CharacterState;
+	UPROPERTY(BlueprintReadOnly, Category = "Movement|Character States")
+	EActionState ActionState;
+	UPROPERTY(BlueprintReadOnly, Category = "Movement|Character States")
+	TEnumAsByte<EDeathPose> DeathPose;
 };
