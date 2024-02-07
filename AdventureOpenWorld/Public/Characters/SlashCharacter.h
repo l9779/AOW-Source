@@ -4,6 +4,7 @@
 #include "Characters/BaseCharacter.h"
 #include "InputActionValue.h"
 #include "CharacterTypes.h"
+#include "Interfaces/PickupInterface.h"
 #include "SlashCharacter.generated.h"
 
 class UInputMappingContext;
@@ -15,7 +16,7 @@ class AItem;
 class UAnimMontage;
 
 UCLASS()
-class ADVENTUREOPENWORLD_API ASlashCharacter : public ABaseCharacter
+class ADVENTUREOPENWORLD_API ASlashCharacter : public ABaseCharacter, public IPickupInterface
 {
 	GENERATED_BODY()
 
@@ -27,7 +28,11 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override; /** <IHitInterface/> */
-
+	
+	/** <IPickupInterface> */
+	virtual void SetOverlappingItem(AItem* Item) override;
+	virtual void AddSouls(class ASoul* Soul) override;
+	/** </IPickupInterface> */
 protected:
 	virtual void BeginPlay() override;
 
@@ -123,8 +128,6 @@ private:
 
 	/* End of Private */
 public:
-	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
-
 	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }
 	FORCEINLINE EActionState GetActionState() const { return ActionState; }
 };

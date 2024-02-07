@@ -8,6 +8,7 @@
 #include "Components/AttributeComponent.h"
 #include "Items/Item.h"
 #include "Items/Weapons/Weapon.h"
+#include "Items/Pickups/Soul.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "HUD/SlashHUD.h"
 #include "HUD/SlashOverlay.h"
@@ -107,6 +108,16 @@ void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint, AActor* 
 
 	if (Attributes && Attributes->GetHealthPercent() > 0.f) 
 		ActionState = EActionState::EAS_HitReaction;
+}
+
+void ASlashCharacter::SetOverlappingItem(AItem* Item)
+{
+	OverlappingItem = Item;
+}
+
+void ASlashCharacter::AddSouls(ASoul* Soul)
+{
+	UE_LOG(LogTemp, Warning, TEXT("PickuoSouls"));
 }
 
 void ASlashCharacter::Movement(const FInputActionValue& Value)
