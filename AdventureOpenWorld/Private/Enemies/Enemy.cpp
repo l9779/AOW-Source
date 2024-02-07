@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Perception/PawnSensingComponent.h"
 #include "Items/Weapons/Weapon.h"
+#include "Items/Pickups/Soul.h"
 
 AEnemy::AEnemy(): 
 	EnemyState(EEnemyState::EES_Patrolling),
@@ -102,6 +103,20 @@ void AEnemy::Die()
 	DisableCapsule();
 	SetLifeSpan(DeathLifeSpan);
 	GetCharacterMovement()->bOrientRotationToMovement = false;
+
+	SpawnSoul();
+}
+
+void AEnemy::SpawnSoul()
+{
+	if (GetWorld() && SoulClass && Attributes)
+	{
+		if (ASoul* SpawnedSoul = GetWorld()->SpawnActor<ASoul>(SoulClass, GetActorTransform()))
+		{
+			SpawnedSoul->SetSouls(Attributes->GetSouls());
+			SpawnedSoul->EnableSphereCollision();
+		}
+	}
 }
 
 void AEnemy::Attack()

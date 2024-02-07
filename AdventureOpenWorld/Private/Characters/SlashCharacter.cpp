@@ -1,4 +1,5 @@
 #include "Characters/SlashCharacter.h"
+#include "Characters/SlashCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
@@ -6,9 +7,10 @@
 #include "EnhancedInputComponent.h"
 #include "GroomComponent.h"
 #include "Components/AttributeComponent.h"
-#include "Items/Item.h"
+//#include "Items/Item.h"
 #include "Items/Weapons/Weapon.h"
 #include "Items/Pickups/Soul.h"
+#include "Items/Pickups/Treasure.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "HUD/SlashHUD.h"
 #include "HUD/SlashOverlay.h"
@@ -74,6 +76,12 @@ void ASlashCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	if (OrientAttackToRotation) OrientAttackRotation(DeltaTime);
+
+	if (Attributes && Attributes->GetStamina() > Attributes->GetMaxStamina())
+	{
+		Attributes->RegenStamina(DeltaTime);
+		if (SlashOverlay) SlashOverlay->SetStaminaBarPercent(Attributes->GetStaminaPercent());
+	}
 }
 
 void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -91,6 +99,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(WalkAction, ETriggerEvent::Started, this, &ASlashCharacter::Walk);
 		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::Started, this, &ASlashCharacter::LeftShiftPressed);
 		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::None, this, &ASlashCharacter::LeftShiftReleased);
+		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Started, this, &ASlashCharacter::Dodge);
 	}
 }
 
@@ -117,7 +126,20 @@ void ASlashCharacter::SetOverlappingItem(AItem* Item)
 
 void ASlashCharacter::AddSouls(ASoul* Soul)
 {
-	UE_LOG(LogTemp, Warning, TEXT("PickuoSouls"));
+	if (Attributes )
+	{
+		Attributes->AddSouls(Soul->GetSouls());
+		if (SlashOverlay) SlashOverlay->SetSouls(Attributes->GetSouls());
+	}
+}
+
+void ASlashCharacter::AddGold(ATreasure* Treasure)
+{
+	if (Attributes && SlashOverlay)
+	{
+		Attributes->AddGold(Treasure->GetGold());
+		SlashOverlay->SetGold(Attributes->GetGold());
+	}
 }
 
 void ASlashCharacter::Movement(const FInputActionValue& Value)
@@ -208,6 +230,20 @@ void ASlashCharacter::LeftShiftReleased()
 	HoldingHeavyAttack = false;
 }
 
+void ASlashCharacter::Dodge()
+{
+	if (IsOccupied() || !HasEnoughStamina()) return;
+
+	PlayDodgeMontage();
+	ActionState = EActionState::EAS_Dodge;
+
+	if (Attributes)
+	{
+		Attributes->UseStamina();
+		if (SlashOverlay) SlashOverlay->SetStaminaBarPercent(Attributes->GetStaminaPercent());
+	}
+}
+
 bool ASlashCharacter::CanAttack() const
 {
 	return ActionState == EActionState::EAS_Unoccupied &&
@@ -288,8 +324,24 @@ void ASlashCharacter::Die()
 	DisableMeshCollision();
 }
 
+bool ASlashCharacter::HasEnoughStamina() const
+{
+	return Attributes && Attributes->GetStamina() > Attributes->GetDodgeCost();
+}
+
+bool ASlashCharacter::IsOccupied() const
+{
+	return ActionState != EActionState::EAS_Unoccupied;
+}
+
 void ASlashCharacter::ANCB_AttackEnd()
 { 
+	ActionState = EActionState::EAS_Unoccupied;
+}
+
+void ASlashCharacter::ANCB_DodgeEnd()
+{
+	Super::ANCB_DodgeEnd();
 	ActionState = EActionState::EAS_Unoccupied;
 }
 

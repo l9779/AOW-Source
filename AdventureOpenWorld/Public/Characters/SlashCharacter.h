@@ -32,6 +32,7 @@ public:
 	/** <IPickupInterface> */
 	virtual void SetOverlappingItem(AItem* Item) override;
 	virtual void AddSouls(class ASoul* Soul) override;
+	virtual void AddGold(class ATreasure* Treasure) override;
 	/** </IPickupInterface> */
 protected:
 	virtual void BeginPlay() override;
@@ -46,6 +47,7 @@ protected:
 	virtual void Attack() override; /** <ABaseCharacter/> */
 	void LeftShiftPressed();
 	void LeftShiftReleased();
+	void Dodge();
 	
 	/** Weapon and Combat Functions */
 	/** <ABaseCharacter> */
@@ -58,9 +60,14 @@ protected:
 	bool CanDisarm() const;
 	bool CanArm() const;
 	void EquipWeapon(AWeapon* Weapon);
+	bool HasEnoughStamina() const;
+	bool IsOccupied() const;
 
 	/** AnimNotify callbacks */
-	virtual void ANCB_AttackEnd() override; /** <ABaseCharacter/> */
+	/** <ABaseCharacter> */
+	virtual void ANCB_AttackEnd() override; 
+	virtual void ANCB_DodgeEnd() override;
+	/** <\ABaseCharacter> */
 	UFUNCTION(BlueprintCallable)
 	void ANCB_AttachWeaponToSheat();
 	UFUNCTION(BlueprintCallable)
@@ -86,6 +93,8 @@ protected:
 	TObjectPtr<UInputAction> AttackAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> HeavyAttackAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> DodgeAction;
 
 	/** Input Variables  */
 	bool HoldingHeavyAttack = false; /* Set by input callback */

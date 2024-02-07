@@ -19,7 +19,7 @@ public:
 	virtual void Destroyed() override;
 	/** </AActor> */
 
-	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override; 	/** <IHitInterface/> */
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override; /* <IHitInterface/> */
 
 	/* End of Public */
 protected:
@@ -27,6 +27,7 @@ protected:
 
 	/** <ABaseCharacter> */
 	virtual void Die() override;
+	void SpawnSoul();
 	virtual void Attack() override;
 	virtual bool CanAttack() const override;
 	virtual void ANCB_AttackEnd() override;
@@ -35,6 +36,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	EEnemyState EnemyState;
+		
+	UPROPERTY(EditAnywhere, Category = Combat)
+	TSubclassOf<class ASoul> SoulClass;
 
 	/* End of Protected */
 private:
@@ -99,7 +103,6 @@ private:
 	float AttackWaitMin;
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float AttackWaitMax;
-
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float DeathLifeSpan;
 

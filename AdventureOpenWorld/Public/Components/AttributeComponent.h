@@ -15,7 +15,7 @@ class ADVENTUREOPENWORLD_API UAttributeComponent : public UActorComponent
 public:
 	UAttributeComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+	void RegenStamina(float DeltaTime);
 protected:
 	virtual void BeginPlay() override;
 
@@ -24,16 +24,40 @@ private:
 	float Health;
 	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
 	float MaxHealth;
+
+	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
+	float Stamina;
+	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
+	float MaxStamina;
+	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
+	float DodgeCost;
+	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
+	float StaminaRegenRate;
+
 	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
 	float WalkSpeed;
 	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
 	float RunSpeed;
 
+	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
+	int32 Gold;
+	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
+	int32 Souls;
+
 public:
 	void ReceiveDamage(float Damage);
+	void UseStamina();
 	float GetHealthPercent();
+	float GetStaminaPercent();
 	bool IsAlive();
+	void AddGold(int32 AmmountToAdd);
+	void AddSouls(int32 AmmountToAdd);
 
-	FORCEINLINE float GetWalkSpeed() { return WalkSpeed; }
-	FORCEINLINE float GetRunSpeed() { return RunSpeed; }
+	FORCEINLINE float GetWalkSpeed() const { return WalkSpeed; }
+	FORCEINLINE float GetRunSpeed() const { return RunSpeed; }
+	FORCEINLINE int32 GetGold() const { return Gold; }
+	FORCEINLINE int32 GetSouls() const { return Souls; }
+	FORCEINLINE float GetStamina() const { return Stamina; }
+	FORCEINLINE float GetMaxStamina() const { return MaxStamina; }
+	FORCEINLINE float GetDodgeCost() const { return DodgeCost; }
 };

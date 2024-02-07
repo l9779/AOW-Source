@@ -39,6 +39,7 @@ protected:
 	virtual int32 PlayAttackMontage(bool bIsHeavyAttack = false);
 	virtual int32 PlayDeathMontage();
 	void PlayHitReactMontage(const FName& SectionName);	
+	void PlayDodgeMontage();
 	void StopAttackMontage();
 
 	/* < Called on BP_Enemy Tick > */
@@ -51,6 +52,8 @@ protected:
 	/**  AnimNotify callbacks */
 	UFUNCTION(BlueprintCallable)
 	virtual void ANCB_AttackEnd();
+	UFUNCTION(BlueprintCallable)
+	virtual void ANCB_DodgeEnd();
 	UFUNCTION(BlueprintCallable)
 	void ANCB_SetWeaponBoxCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
 
@@ -88,6 +91,8 @@ private:
 	TObjectPtr<UAnimMontage> HitReactMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	TObjectPtr<UAnimMontage> DeathMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	TObjectPtr<UAnimMontage> DodgeMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	TArray<FName> AttackMontageSections;

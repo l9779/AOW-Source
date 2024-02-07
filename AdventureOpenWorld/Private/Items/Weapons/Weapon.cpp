@@ -81,7 +81,7 @@ void AWeapon::Unequip()
 
 void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (HitActorIsSameType(OtherActor)) return;
+	if (HitActorIsSameType(OtherActor) || !Cast<IHitInterface>(OtherActor)) return;
 	
 	FHitResult OutBoxHit;
 	BoxTrace(OutBoxHit);
@@ -113,8 +113,9 @@ void AWeapon::BoxTrace(FHitResult& OutBoxHit)
 	const FVector End = BoxTraceEnd->GetComponentLocation();
 
 	TArray<AActor*> ActorsToIgnore;
-	ActorsToIgnore.AddUnique(GetOwner());
-	for (AActor* Actor : IgnoreActors) ActorsToIgnore.Add(Actor);
+	ActorsToIgnore.Add(this);
+	ActorsToIgnore.Add(GetOwner());
+	for (AActor* Actor : IgnoreActors) ActorsToIgnore.AddUnique(Actor);
 
 	UKismetSystemLibrary::BoxTraceSingle(
  		this,

@@ -41,6 +41,7 @@ void ABaseCharacter::Attack()
 void ABaseCharacter::Die()
 {
 	Tags.Add(FName("Dead"));
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	PlayDeathMontage();
 }
 
@@ -153,6 +154,11 @@ void ABaseCharacter::PlayHitReactMontage(const FName& SectionName)
 	}
 }
 
+void ABaseCharacter::PlayDodgeMontage()
+{
+	if (DodgeMontage) PlayMontageSection(DodgeMontage, FName("Default"));
+}
+
 void ABaseCharacter::StopAttackMontage()
 {
 	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
@@ -215,6 +221,10 @@ void ABaseCharacter::ANCB_SetWeaponBoxCollisionEnabled(ECollisionEnabled::Type C
 }
 
 void ABaseCharacter::ANCB_AttackEnd()
+{
+}
+
+void ABaseCharacter::ANCB_DodgeEnd()
 {
 }
 
