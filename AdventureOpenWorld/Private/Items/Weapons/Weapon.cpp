@@ -8,7 +8,7 @@
 #include "NiagaraComponent.h"
 
 AWeapon::AWeapon(): 
-	Damage(20.f)
+	Damage(20.f), StaminaAttackCost(25.f)
 {
 	WeaponBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Weapon Box"));
 	WeaponBox->SetupAttachment(GetRootComponent());
@@ -92,7 +92,7 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 
 		UGameplayStatics::ApplyDamage(OutBoxHit.GetActor(), Damage, GetInstigator()->GetController(), this, UDamageType::StaticClass());
 		ExecuteGetHit(OutBoxHit);
-		CreateFields(OutBoxHit.ImpactPoint);
+		//CreateFields(OutBoxHit.ImpactPoint);
 	}
 }
 

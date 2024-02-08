@@ -16,6 +16,7 @@ public:
 	UAttributeComponent();
 
 	void RegenStamina(float DeltaTime);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -30,7 +31,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
 	float MaxStamina;
 	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
-	float DodgeCost;
+	float StaminaDodgeCost;
 	UPROPERTY(EditAnywhere, Category = "Actor Attributes")
 	float StaminaRegenRate;
 
@@ -47,7 +48,7 @@ private:
 public:
 	void ReceiveDamage(float Damage);
 	void Heal(float HealAmmount);
-	void UseStamina();
+	void UseStamina(float StaminaCost);
 	float GetHealthPercent();
 	float GetStaminaPercent();
 	bool IsAlive() const;
@@ -61,5 +62,5 @@ public:
 	FORCEINLINE int32 GetSouls() const { return Souls; }
 	FORCEINLINE float GetStamina() const { return Stamina; }
 	FORCEINLINE float GetMaxStamina() const { return MaxStamina; }
-	FORCEINLINE float GetDodgeCost() const { return DodgeCost; }
+	FORCEINLINE float GetStaminaDodgeCost() const { return StaminaDodgeCost; }
 };

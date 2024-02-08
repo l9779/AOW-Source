@@ -224,13 +224,17 @@ void ASlashCharacter::EKeyPressed()
 
 void ASlashCharacter::Jump()
 {
-	if (IsUnoccupied()) Super::Jump();
+	if (IsUnoccupied() && !GetCharacterMovement()->IsFalling() ) Super::Jump();
 }
 
 void ASlashCharacter::Attack()
 {
 	if (CanAttack())
 	{
+		if (Attributes && EquippedWeapon)
+			Attributes->UseStamina(EquippedWeapon->GetStaminaAttackCost());
+
+		SetHUDStamina();
 		PlayAttackMontage(HoldingHeavyAttack);
 		ActionState = EActionState::EAS_Attacking;
 	} 
@@ -254,12 +258,14 @@ void ASlashCharacter::Dodge()
 {
 	if (IsOccupied() || !HasEnoughStamina()) return;
 
+	Tags.Add(FName("Dodging"));
+
 	PlayDodgeMontage();
 	ActionState = EActionState::EAS_Dodge;
 
 	if (Attributes)
 	{
-		Attributes->UseStamina();
+		Attributes->UseStamina(Attributes->GetStaminaDodgeCost());
 		SetHUDStamina();
 	}
 }
@@ -285,8 +291,9 @@ void ASlashCharacter::DrinkPotion()
 
 bool ASlashCharacter::CanAttack() const
 {
-	return ActionState == EActionState::EAS_Unoccupied &&
-		CharacterState != ECharacterState::ECS_Unequipped;
+	return HasEnoughStamina() &&
+	ActionState == EActionState::EAS_Unoccupied &&
+	CharacterState != ECharacterState::ECS_Unequipped;	
 }
 
 void ASlashCharacter::OrientAttackRotation(float DeltaTime)
@@ -365,7 +372,7 @@ void ASlashCharacter::Die()
 
 bool ASlashCharacter::HasEnoughStamina() const
 {
-	return Attributes && Attributes->GetStamina() > Attributes->GetDodgeCost();
+	return Attributes && Attributes->GetStamina() > 0.f;
 }
 
 bool ASlashCharacter::IsOccupied() const
@@ -381,6 +388,8 @@ void ASlashCharacter::ANCB_AttackEnd()
 void ASlashCharacter::ANCB_DodgeEnd()
 {
 	Super::ANCB_DodgeEnd();
+
+	Tags.Remove(FName("Dodging"));
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
@@ -411,7 +420,7 @@ void ASlashCharacter::ANCB_SetPotionVisibility(bool Visiblity)
 	PotionMesh->SetVisibility(Visiblity);
 
 	// if false means is the end of the drinking animation, so set the state to unoccupied
-	if (Visiblity == false) ActionState = EActionState::EAS_Unoccupied;
+	if (!Visiblity) ActionState = EActionState::EAS_Unoccupied;
 }
 
 bool ASlashCharacter::IsUnoccupied() const

@@ -4,10 +4,8 @@
 #include "Items/Pickups/Treasure.h"
 
 ABreakableActor::ABreakableActor() :
-	bBroken(false), bShouldSpawnTreasure(true)
+	bBroken(false), bShouldSpawnTreasure(false)
 {
-	PrimaryActorTick.bCanEverTick = false;
-
 	GeometryCollection = CreateDefaultSubobject<UGeometryCollectionComponent>("Geometry Collection Component");
 	GeometryCollection->SetGenerateOverlapEvents(true);
 	GeometryCollection->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -26,6 +24,14 @@ void ABreakableActor::BeginPlay()
 	Super::BeginPlay();
 	
 	GeometryCollection->OnChaosBreakEvent.AddDynamic(this, &ABreakableActor::OnChaosBreak);
+
+	VolumeBox->OnComponentHit.AddDynamic(this, &ABreakableActor::OnBoxHit);
+}
+
+void ABreakableActor::OnBoxHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (OtherActor->ActorHasTag(FName("Dodging")))
+		Execute_GetHit(this, Hit.ImpactPoint, OtherActor);
 }
 
 void ABreakableActor::OnChaosBreak(const FChaosBreakEvent& BreakEvent)
@@ -33,10 +39,19 @@ void ABreakableActor::OnChaosBreak(const FChaosBreakEvent& BreakEvent)
 	VolumeBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 }
 
-void ABreakableActor::Tick(float DeltaTime)
+void ABreakableActor::SpawnTreasure()
 {
-	Super::Tick(DeltaTime);
+	if (GetWorld() && (TreasureClasses.Num() > 0))
+	{
+		FVector SpawnLocation = GetActorLocation();
+		SpawnLocation.Z += 75.f;
 
+		GetWorld()->SpawnActor<ATreasure>(
+			TreasureClasses[FMath::RandRange(0, TreasureClasses.Num() - 1)],
+			SpawnLocation,
+			GetActorRotation()
+		);
+	}
 }
 
 void ABreakableActor::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
@@ -44,16 +59,6 @@ void ABreakableActor::GetHit_Implementation(const FVector& ImpactPoint, AActor* 
 	if (bBroken) return;
 	bBroken = true;
 
-	if (GetWorld() && (TreasureClasses.Num() > 0) && bShouldSpawnTreasure)
-	{
-		FVector SpawnLocation = GetActorLocation();
-		SpawnLocation.Z += 75.f;
-
-		GetWorld()->SpawnActor<ATreasure>(
-			TreasureClasses[FMath::RandRange(0, TreasureClasses.Num() - 1)],
-			SpawnLocation, 
-			GetActorRotation()
-		);
-	}
-
+	CreateFields(ImpactPoint);
+	if (bShouldSpawnTreasure) SpawnTreasure();
 }

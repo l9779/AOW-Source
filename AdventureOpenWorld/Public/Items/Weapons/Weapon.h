@@ -59,6 +59,8 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	float Damage;
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	float StaminaAttackCost;
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	EWeaponType WeaponType;
 
 	UPROPERTY(VisibleAnywhere)
@@ -70,5 +72,6 @@ private:
 
 public:
 	FORCEINLINE TObjectPtr<UBoxComponent> GetWeaponBox() { return WeaponBox; }
-	FORCEINLINE EWeaponType GetWeaponType() { return WeaponType; }
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	FORCEINLINE float GetStaminaAttackCost() const { return StaminaAttackCost; }
 };

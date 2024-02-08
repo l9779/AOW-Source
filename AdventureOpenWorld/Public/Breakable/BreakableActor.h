@@ -15,12 +15,13 @@ class ADVENTUREOPENWORLD_API ABreakableActor : public AActor, public IHitInterfa
 public:	
 	ABreakableActor();
 
-	virtual void Tick(float DeltaTime) override;
-
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override;
 
 protected:
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void OnBoxHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	TObjectPtr<class UBoxComponent> VolumeBox;
@@ -28,16 +29,23 @@ protected:
 	UFUNCTION()
 	void OnChaosBreak(const FChaosBreakEvent& BreakEvent);
 
+	/* Called on GetHit_Implementation() and OnBoxHit() defined on BP_BreakableActor */
+	UFUNCTION(BlueprintImplementableEvent)
+	void CreateFields(const FVector& FieldLocation);
+
+	void SpawnTreasure();
+
 private:
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UGeometryCollectionComponent> GeometryCollection;
+
+	bool bBroken;
 
 	UPROPERTY(EditAnywhere, Category = "Breakable Properties")
 	TArray<TSubclassOf<class ATreasure>> TreasureClasses;
 	UPROPERTY(EditAnywhere, Category = "Breakable Properties")
 	bool bShouldSpawnTreasure;
 	
-	bool bBroken;
 public:	
 
 };
