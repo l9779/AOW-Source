@@ -7,7 +7,7 @@
 #include "EnhancedInputComponent.h"
 #include "GroomComponent.h"
 #include "Components/AttributeComponent.h"
-//#include "Items/Item.h"
+#include "Components/InventoryComponent.h"
 #include "Items/Weapons/Weapon.h"
 #include "Items/Pickups/Soul.h"
 #include "Items/Pickups/Treasure.h"
@@ -50,6 +50,13 @@ ASlashCharacter::ASlashCharacter():
 	EyebrownHair->SetupAttachment(GetMesh());
 	EyebrownHair->AttachmentName = FString("head");
 
+	Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory Component"));
+
+	PotionMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Potion Mesh"));
+	PotionMesh->SetupAttachment(GetMesh(), FName("LeftHandSocket"));
+	PotionMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	PotionMesh->SetVisibility(false);
+
 }
 
 void ASlashCharacter::BeginPlay()
@@ -77,10 +84,10 @@ void ASlashCharacter::Tick(float DeltaTime)
 
 	if (OrientAttackToRotation) OrientAttackRotation(DeltaTime);
 
-	if (Attributes && Attributes->GetStamina() > Attributes->GetMaxStamina())
+	if (Attributes && Attributes->GetStamina() < Attributes->GetMaxStamina())
 	{
 		Attributes->RegenStamina(DeltaTime);
-		if (SlashOverlay) SlashOverlay->SetStaminaBarPercent(Attributes->GetStaminaPercent());
+		SetHUDStamina();
 	}
 }
 
@@ -100,6 +107,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::Started, this, &ASlashCharacter::LeftShiftPressed);
 		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::None, this, &ASlashCharacter::LeftShiftReleased);
 		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Started, this, &ASlashCharacter::Dodge);
+		EnhancedInputComponent->BindAction(DrinkPotionAction, ETriggerEvent::Started, this, &ASlashCharacter::DrinkPotion);
 	}
 }
 
@@ -126,7 +134,7 @@ void ASlashCharacter::SetOverlappingItem(AItem* Item)
 
 void ASlashCharacter::AddSouls(ASoul* Soul)
 {
-	if (Attributes )
+	if (Attributes)
 	{
 		Attributes->AddSouls(Soul->GetSouls());
 		if (SlashOverlay) SlashOverlay->SetSouls(Attributes->GetSouls());
@@ -135,16 +143,28 @@ void ASlashCharacter::AddSouls(ASoul* Soul)
 
 void ASlashCharacter::AddGold(ATreasure* Treasure)
 {
-	if (Attributes && SlashOverlay)
+	if (Attributes)
 	{
 		Attributes->AddGold(Treasure->GetGold());
-		SlashOverlay->SetGold(Attributes->GetGold());
+		if (SlashOverlay) SlashOverlay->SetGold(Attributes->GetGold());
 	}
+}
+
+bool ASlashCharacter::CollectHealthPotion()
+{
+	if (Inventory && Inventory->HasSpaceForHealthPotion())
+	{
+		Inventory->AddHealthPotion();
+		SetHUDPotionCount();
+		return true;
+	}
+
+	return false;
 }
 
 void ASlashCharacter::Movement(const FInputActionValue& Value)
 {
-	// this can be impruved with a proper game over mechanic (Dettach from controller, etc)
+	// this can be improoved with a proper game over mechanic (Dettach from controller, etc)
 	if (ActionState == EActionState::EAS_Attacking || !IsAlive()) return;
 
 	const FVector2D InputDirection = Value.Get<FVector2D>();
@@ -240,7 +260,26 @@ void ASlashCharacter::Dodge()
 	if (Attributes)
 	{
 		Attributes->UseStamina();
-		if (SlashOverlay) SlashOverlay->SetStaminaBarPercent(Attributes->GetStaminaPercent());
+		SetHUDStamina();
+	}
+}
+
+void ASlashCharacter::DrinkPotion()
+{
+	if (Attributes)
+	{
+		if (!Attributes->IsHurt()) return;
+	
+		if (Inventory && Inventory->GetHealthPotionCount() > 0)
+		{
+			Inventory->UseHealthPotion();
+			Attributes->Heal(Inventory->GetHealthPotionRecovery());
+			SetHUDHealth();
+			if (EquipMontage) PlayMontageSection(EquipMontage, FName("DrinkPotion"));
+			ActionState = EActionState::EAS_EquippingWeapon;
+			ANCB_SetPotionVisibility(true);
+			SetHUDPotionCount();
+		}
 	}
 }
 
@@ -367,6 +406,14 @@ void ASlashCharacter::ANCB_HitReactEnd()
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
+void ASlashCharacter::ANCB_SetPotionVisibility(bool Visiblity)
+{
+	PotionMesh->SetVisibility(Visiblity);
+
+	// if false means is the end of the drinking animation, so set the state to unoccupied
+	if (Visiblity == false) ActionState = EActionState::EAS_Unoccupied;
+}
+
 bool ASlashCharacter::IsUnoccupied() const
 {
 	return ActionState == EActionState::EAS_Unoccupied;
@@ -397,7 +444,13 @@ void ASlashCharacter::InitializeSlashOverlay(APlayerController* PlayerController
 	{
 		SlashOverlay = SlashHUD->GetSlashOverlay();
 		if (SlashOverlay && Attributes)
-			SlashOverlay->SetAllOverlayValues(0, 0, Attributes->GetHealthPercent());
+		{
+			SetHUDHealth();
+			SetHUDStamina();
+			SlashOverlay->SetGold(Attributes->GetGold());
+			SlashOverlay->SetSouls(Attributes->GetSouls());
+			SetHUDPotionCount();
+		}
 	}
 }
 
@@ -405,4 +458,16 @@ void ASlashCharacter::SetHUDHealth()
 {
 	if (SlashOverlay && Attributes)
 		SlashOverlay->SetHealthBarPercent(Attributes->GetHealthPercent());
+}
+
+void ASlashCharacter::SetHUDStamina()
+{
+	if (SlashOverlay && Attributes)
+		SlashOverlay->SetStaminaBarPercent(Attributes->GetStaminaPercent());
+}
+
+void ASlashCharacter::SetHUDPotionCount()
+{
+	if (SlashOverlay && Inventory) 
+		SlashOverlay->SetPotionCount(Inventory->GetHealthPotionCount());
 }

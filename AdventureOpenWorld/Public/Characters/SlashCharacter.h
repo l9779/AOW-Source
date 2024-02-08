@@ -33,7 +33,9 @@ public:
 	virtual void SetOverlappingItem(AItem* Item) override;
 	virtual void AddSouls(class ASoul* Soul) override;
 	virtual void AddGold(class ATreasure* Treasure) override;
+	virtual bool CollectHealthPotion() override;
 	/** </IPickupInterface> */
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -48,7 +50,8 @@ protected:
 	void LeftShiftPressed();
 	void LeftShiftReleased();
 	void Dodge();
-	
+	void DrinkPotion();
+
 	/** Weapon and Combat Functions */
 	/** <ABaseCharacter> */
 	virtual bool CanAttack() const override; 
@@ -76,6 +79,8 @@ protected:
 	void ANCB_SetDirectionAttack(bool b);
 	UFUNCTION(BlueprintCallable)
 	void ANCB_HitReactEnd();
+	UFUNCTION(BlueprintCallable)
+	void ANCB_SetPotionVisibility(bool Visiblity);
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputMappingContext> SlashMappingContext;	
@@ -95,6 +100,8 @@ protected:
 	TObjectPtr<UInputAction> HeavyAttackAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> DodgeAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> DrinkPotionAction;
 
 	/** Input Variables  */
 	bool HoldingHeavyAttack = false; /* Set by input callback */
@@ -104,12 +111,17 @@ protected:
 	float InputY = 0.f;
 	float InputX = 0.f;
 
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<class UInventoryComponent> Inventory;
+
 	/* End of Protected */
 private:		
 	bool IsUnoccupied() const;
 	void SetCharacterStateOnWeapon();
 	void InitializeSlashOverlay(APlayerController* PlayerController);
+	void SetHUDPotionCount();
 	void SetHUDHealth();
+	void SetHUDStamina();
 
 	/** Character Components */
 	UPROPERTY(VisibleAnywhere)
@@ -121,6 +133,9 @@ private:
 	TObjectPtr<UGroomComponent> HeadHair;
 	UPROPERTY(VisibleAnywhere, Category = "Hair Groom")
 	TObjectPtr<UGroomComponent> EyebrownHair;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory", meta = (AllowPrivateAccess = true))
+	TObjectPtr<UStaticMeshComponent> PotionMesh;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	TObjectPtr<UAnimMontage> EquipMontage;

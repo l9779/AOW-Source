@@ -24,8 +24,8 @@ public:
 	void SetStaminaBarPercent(float Percent);
 	void SetGold(int32 Gold);
 	void SetSouls(int32 Souls);
+	void SetPotionCount(int32 PotionAmmount);
 	
-	void SetAllOverlayValues(int32 GoldCount = 0, int32 SoulsCount = 0, float HealthPercent = 1.f, float StaminaPercent = 1.f);
 private:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> HealthProgressBar;
@@ -35,4 +35,6 @@ private:
 	TObjectPtr<UTextBlock> GoldCountText;
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> SoulsCountText;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> PotionCountText;
 };

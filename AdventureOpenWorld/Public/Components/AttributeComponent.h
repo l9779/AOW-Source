@@ -14,7 +14,7 @@ class ADVENTUREOPENWORLD_API UAttributeComponent : public UActorComponent
 
 public:
 	UAttributeComponent();
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 	void RegenStamina(float DeltaTime);
 protected:
 	virtual void BeginPlay() override;
@@ -46,10 +46,12 @@ private:
 
 public:
 	void ReceiveDamage(float Damage);
+	void Heal(float HealAmmount);
 	void UseStamina();
 	float GetHealthPercent();
 	float GetStaminaPercent();
-	bool IsAlive();
+	bool IsAlive() const;
+	bool IsHurt() const;
 	void AddGold(int32 AmmountToAdd);
 	void AddSouls(int32 AmmountToAdd);
 

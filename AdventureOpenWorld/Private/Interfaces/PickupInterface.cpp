@@ -14,3 +14,8 @@ void IPickupInterface::AddSouls(ASoul* Soul)
 void IPickupInterface::AddGold(ATreasure* Gold)
 {
 }
+
+bool IPickupInterface::CollectHealthPotion()
+{
+	return false;
+}

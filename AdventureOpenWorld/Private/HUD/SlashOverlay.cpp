@@ -24,10 +24,8 @@ void USlashOverlay::SetSouls(int32 Souls)
 		SoulsCountText->SetText(FText::FromString(FString::Printf(TEXT("%d"), Souls)));
 }
 
-void USlashOverlay::SetAllOverlayValues(int32 GoldCount, int32 SoulsCount, float HealthPercent, float StaminaPercent)
+void USlashOverlay::SetPotionCount(int32 PotionAmmount)
 {
-	SetGold(GoldCount);
-	SetSouls(SoulsCount);
-	SetHealthBarPercent(HealthPercent);
-	SetStaminaBarPercent(StaminaPercent);
+	if (PotionCountText)
+		PotionCountText->SetText(FText::FromString(FString::Printf(TEXT("%d"), PotionAmmount)));
 }
