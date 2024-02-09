@@ -39,6 +39,8 @@ protected:
 		
 	UPROPERTY(EditAnywhere, Category = Combat)
 	TSubclassOf<class ASoul> SoulClass;
+	UPROPERTY(EditAnywhere, Category = Combat)
+	FName WeaponSocket = FName("");
 
 	/* End of Protected */
 private:
@@ -74,12 +76,12 @@ private:
 	TObjectPtr<class UHealthBarComponent> HealthBarWidgetComponent;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UPawnSensingComponent> PawnSensing;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = Combat)
 	TSubclassOf<class AWeapon> WeaponClass;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = Combat)
 	double CombatRadius;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = Combat)
 	double AttackRadius;
 
 	UPROPERTY()
@@ -97,6 +99,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
 	float PatrolWaitMax;
 	FTimerHandle PatrolTimer;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float AcceptanceRadius;
 
 	FTimerHandle AttackTimer;
 	UPROPERTY(EditAnywhere, Category = Combat)

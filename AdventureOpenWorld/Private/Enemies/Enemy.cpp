@@ -11,7 +11,7 @@
 AEnemy::AEnemy(): 
 	EnemyState(EEnemyState::EES_Patrolling),
 	CombatRadius(1000.f), AttackRadius(150.f), PatrolRadius(200.f),
-	PatrolWaitMin(5.f), PatrolWaitMax(10.f),
+	PatrolWaitMin(5.f), PatrolWaitMax(10.f), AcceptanceRadius(50.f),
 	AttackWaitMin(.5f), AttackWaitMax(1.f), DeathLifeSpan(120.f)
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -163,7 +163,7 @@ void AEnemy::SpawnDefaultWeapon()
 	if (GetWorld() && WeaponClass)
 		if (AWeapon* DefaultWeapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass))
 		{
-			DefaultWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this, false);
+			DefaultWeapon->Equip(GetMesh(), WeaponSocket, this, this, false);
 			EquippedWeapon = DefaultWeapon;
 		}
 }
@@ -299,7 +299,7 @@ void AEnemy::MoveToTarget(AActor* Target)
 	
 	FAIMoveRequest MoveRequest;
 	MoveRequest.SetGoalActor(Target);
-	MoveRequest.SetAcceptanceRadius(60.f);
+	MoveRequest.SetAcceptanceRadius(AcceptanceRadius);
 	EnemyController->MoveTo(MoveRequest);
 
 }
