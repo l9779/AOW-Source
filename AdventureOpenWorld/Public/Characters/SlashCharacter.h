@@ -63,7 +63,7 @@ protected:
 	bool CanDisarm() const;
 	bool CanArm() const;
 	void EquipWeapon(AWeapon* Weapon);
-	bool HasEnoughStamina() const;
+	bool HasEnoughStamina(float StaminaCost = 0.f) const;
 	bool IsOccupied() const;
 
 	/** AnimNotify callbacks */

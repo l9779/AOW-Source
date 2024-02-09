@@ -291,7 +291,7 @@ void ASlashCharacter::DrinkPotion()
 
 bool ASlashCharacter::CanAttack() const
 {
-	return HasEnoughStamina() &&
+	return HasEnoughStamina(EquippedWeapon->GetStaminaAttackCost()) &&
 	ActionState == EActionState::EAS_Unoccupied &&
 	CharacterState != ECharacterState::ECS_Unequipped;	
 }
@@ -370,9 +370,9 @@ void ASlashCharacter::Die()
 	DisableMeshCollision();
 }
 
-bool ASlashCharacter::HasEnoughStamina() const
+bool ASlashCharacter::HasEnoughStamina(float StaminaCost) const
 {
-	return Attributes && Attributes->GetStamina() > 0.f;
+	return Attributes && Attributes->GetStamina() > StaminaCost;
 }
 
 bool ASlashCharacter::IsOccupied() const

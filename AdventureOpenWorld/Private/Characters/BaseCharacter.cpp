@@ -109,8 +109,25 @@ int32 ABaseCharacter::PlayRandomMontageSection(UAnimMontage* Montage, const TArr
 
 int32 ABaseCharacter::PlayAttackMontage(bool bIsHeavyAttack)
 {
-	/** redo entirely combat system hopefully later */
-	return PlayRandomMontageSection(AttackMontage, AttackMontageSections);
+	UAnimMontage* MontageToPlay;
+
+	switch (EquippedWeapon->GetWeaponType())
+	{
+	case (EWeaponType::EWT_Default):
+		MontageToPlay = DefaultAttackMontage;
+		break;
+	case (EWeaponType::EWT_OneHandSword):
+		MontageToPlay = SwordAttackMontage;
+		break;
+	case (EWeaponType::EWT_GreatSword):
+		MontageToPlay = GreatSwordAttackMontage;
+		break;
+	default:
+		MontageToPlay = DefaultAttackMontage;
+		break;
+	}
+
+	return PlayRandomMontageSection(MontageToPlay, AttackMontageSections);
 }
 
 int32 ABaseCharacter::PlayDeathMontage()
@@ -140,8 +157,11 @@ void ABaseCharacter::PlayDodgeMontage()
 
 void ABaseCharacter::StopAttackMontage()
 {
-	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
-		AnimInstance->Montage_Stop(.25f, AttackMontage);
+	if ( UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	{
+		UAnimMontage* CurrentPlayingMontage = AnimInstance->GetCurrentActiveMontage();
+		AnimInstance->Montage_Stop(.25f, CurrentPlayingMontage);
+	}
 }
 
 /* < Called on BP_Enemy Tick > */

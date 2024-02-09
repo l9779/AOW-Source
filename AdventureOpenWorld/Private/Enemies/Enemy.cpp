@@ -85,7 +85,8 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 
 	ClearPatrolTimer();
 	ClearAttackTimer();
-	StopAttackMontage();
+
+	if (IsAttacking()) StopAttackMontage();
 
 	if (!IsDead()) ShowHealthBar();
 }

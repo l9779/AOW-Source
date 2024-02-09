@@ -80,7 +80,11 @@ private:
 
 	/** Animation Montages */
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	TObjectPtr<UAnimMontage> AttackMontage;
+	TObjectPtr<UAnimMontage> DefaultAttackMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	TObjectPtr<UAnimMontage> SwordAttackMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	TObjectPtr<UAnimMontage> GreatSwordAttackMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	TObjectPtr<UAnimMontage> HitReactMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")

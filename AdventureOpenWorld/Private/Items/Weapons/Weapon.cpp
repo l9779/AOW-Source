@@ -8,7 +8,7 @@
 #include "NiagaraComponent.h"
 
 AWeapon::AWeapon(): 
-	Damage(20.f), StaminaAttackCost(25.f)
+	Damage(20.f), StaminaAttackCost(25.f), WeaponType(EWeaponType::EWT_Default)
 {
 	WeaponBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Weapon Box"));
 	WeaponBox->SetupAttachment(GetRootComponent());
