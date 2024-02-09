@@ -114,11 +114,10 @@ void AEnemy::SpawnSoul()
 {
 	if (GetWorld() && SoulClass && Attributes)
 	{
-		if (ASoul* SpawnedSoul = GetWorld()->SpawnActor<ASoul>(SoulClass, GetActorTransform()))
-		{
+		const FVector SpawnLocation = GetActorLocation() + FVector(0.f, 0.f, 125.f);
+
+		if (ASoul* SpawnedSoul = GetWorld()->SpawnActor<ASoul>(SoulClass, SpawnLocation, GetActorRotation()))
 			SpawnedSoul->SetSouls(Attributes->GetSouls());
-			SpawnedSoul->EnableSphereCollision();
-		}
 	}
 }
 

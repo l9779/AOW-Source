@@ -291,9 +291,9 @@ void ASlashCharacter::DrinkPotion()
 
 bool ASlashCharacter::CanAttack() const
 {
-	return HasEnoughStamina(EquippedWeapon->GetStaminaAttackCost()) &&
-	ActionState == EActionState::EAS_Unoccupied &&
-	CharacterState != ECharacterState::ECS_Unequipped;	
+	return ActionState == EActionState::EAS_Unoccupied &&
+	CharacterState != ECharacterState::ECS_Unequipped &&
+	HasEnoughStamina(EquippedWeapon->GetStaminaAttackCost());
 }
 
 void ASlashCharacter::OrientAttackRotation(float DeltaTime)

@@ -1,12 +1,33 @@
 #include "Items/Pickups/Soul.h"
 #include "Interfaces/PickupInterface.h"
-#include "Components/SphereComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 void ASoul::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Sphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	const FVector Start = GetActorLocation();
+	const FVector End = Start - FVector(0.f, 0.f, 2000.f);
+
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	ObjectTypes.Add(EObjectTypeQuery::ObjectTypeQuery1);
+
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(GetOwner());
+
+	FHitResult OutHitResult;
+
+	UKismetSystemLibrary::LineTraceSingleForObjects(
+		this,
+		Start, End,
+		ObjectTypes,
+		false,
+		ActorsToIgnore,
+		EDrawDebugTrace::None,
+		OutHitResult,
+		true);
+
+	DesiredZ = OutHitResult.ImpactPoint.Z + 100.f;
 }
 
 void ASoul::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -21,7 +42,11 @@ void ASoul::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 	
 }
 
-void ASoul::EnableSphereCollision()
+void ASoul::Tick(float DeltaTime)
 {
-	Sphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	Super::Tick(DeltaTime);
+
+	const double LocationZ = GetActorLocation().Z;
+	if (LocationZ > DesiredZ)
+		AddActorWorldOffset(FVector(0.f, 0.f, DriftRate * DeltaTime));
 }
