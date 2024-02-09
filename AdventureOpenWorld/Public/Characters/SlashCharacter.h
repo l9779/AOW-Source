@@ -55,7 +55,7 @@ protected:
 	/** Weapon and Combat Functions */
 	/** <ABaseCharacter> */
 	virtual bool CanAttack() const override; 
-	virtual void Die() override;
+	virtual void Die_Implementation() override;
 	/** </ABaseCharacter> */
 	void OrientAttackRotation(float DeltaTime);
 	void UnsheatWeapon();

@@ -26,7 +26,7 @@ protected:
 	virtual void BeginPlay() override; /** <AActor/> */
 
 	/** <ABaseCharacter> */
-	virtual void Die() override;
+	virtual void Die_Implementation() override;
 	void SpawnSoul();
 	virtual void Attack() override;
 	virtual bool CanAttack() const override;
@@ -34,7 +34,7 @@ protected:
 	virtual void HandleDamage(float DamageAmount) override;
 	/** </ABaseCharacter> */
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat)
 	EEnemyState EnemyState;
 		
 	UPROPERTY(EditAnywhere, Category = Combat)
@@ -79,9 +79,11 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	TSubclassOf<class AWeapon> WeaponClass;
 
-	UPROPERTY(EditAnywhere, Category = Combat)
+	/** Will chase CombatTarget inside this radius */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	double CombatRadius;
-	UPROPERTY(EditAnywhere, Category = Combat)
+	/** Radius to start attack */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	double AttackRadius;
 
 	UPROPERTY()
@@ -92,6 +94,7 @@ private:
 	TObjectPtr<AActor> PatrolTarget;
 	UPROPERTY(EditInstanceOnly, Category = "AI Navigation")
 	TArray<TObjectPtr<AActor>> PatrolTargets;
+	/** Radius of patrol points, if inside radius -> pick next patrol point */
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
 	double PatrolRadius;
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
@@ -100,7 +103,8 @@ private:
 	float PatrolWaitMax;
 	FTimerHandle PatrolTimer;
 
-	UPROPERTY(EditAnywhere, Category = Combat)
+	/** Acceptance radius of move to target, should be smaller than AttackRadius */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	float AcceptanceRadius;
 
 	FTimerHandle AttackTimer;

@@ -38,7 +38,7 @@ void ABaseCharacter::Attack()
 	if (CombatTarget && CombatTarget->ActorHasTag(FName("Dead"))) CombatTarget = nullptr;
 }
 
-void ABaseCharacter::Die()
+void ABaseCharacter::Die_Implementation()
 {
 	Tags.Add(FName("Dead"));
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -64,10 +64,10 @@ void ABaseCharacter::DirectionalHitReact(const FVector& ImpactPoint)
 	const FVector CrossProduct = FVector::CrossProduct(Forward, ToHit);
 	if (CrossProduct.Z < 0) Theta *= -1.f;
 
-	FName Section("FromBackLarge");
-	if (Theta >= -45.f && Theta < 45.f) Section = FName("FromFrontLarge");
-	else if (Theta >= -135.f && Theta < -45.f) Section = FName("FromLeftLarge");
-	else if (Theta >= 45.f && Theta < 135.f) Section = FName("FromRightLarge");
+	FName Section("FromBack");
+	if (Theta >= -45.f && Theta < 45.f) Section = FName("FromFront");
+	else if (Theta >= -135.f && Theta < -45.f) Section = FName("FromLeft");
+	else if (Theta >= 45.f && Theta < 135.f) Section = FName("FromRight");
 
 	PlayHitReactMontage(Section);
 }
@@ -157,7 +157,7 @@ void ABaseCharacter::PlayDodgeMontage()
 
 void ABaseCharacter::StopAttackMontage()
 {
-	if ( UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 	{
 		UAnimMontage* CurrentPlayingMontage = AnimInstance->GetCurrentActiveMontage();
 		AnimInstance->Montage_Stop(.25f, CurrentPlayingMontage);

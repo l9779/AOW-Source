@@ -86,14 +86,16 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 	ClearPatrolTimer();
 	ClearAttackTimer();
 
-	if (IsAttacking()) StopAttackMontage();
+	if (IsEngaged()) StopAttackMontage();
+
+	if (IsInsideAttackRadius() && !IsDead()) StartAttackTimer();
 
 	if (!IsDead()) ShowHealthBar();
 }
 
-void AEnemy::Die()
+void AEnemy::Die_Implementation()
 {
-	Super::Die();
+	Super::Die_Implementation();
 
 	if (CombatTarget->ActorHasTag(FName("PlayerCharacter")))
 		Cast<ABaseCharacter>(CombatTarget)->SetCombatTarget(nullptr);

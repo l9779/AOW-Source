@@ -362,9 +362,9 @@ void ASlashCharacter::EquipWeapon(AWeapon* Weapon)
 	SetCharacterStateOnWeapon();
 }
 
-void ASlashCharacter::Die()
+void ASlashCharacter::Die_Implementation()
 {
-	Super::Die();
+	Super::Die_Implementation();
 
 	ActionState = EActionState::EAS_Dead;
 	DisableMeshCollision();
