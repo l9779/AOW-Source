@@ -101,13 +101,15 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::None , this, &ASlashCharacter::ClearMovement);
 		EnhancedInputComponent->BindAction(LookAroundAction, ETriggerEvent::Triggered, this, &ASlashCharacter::LookAround);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started , this, &ASlashCharacter::Jump);
-		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &ASlashCharacter::EKeyPressed);
+		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &ASlashCharacter::EquipKeyPressed);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ASlashCharacter::Attack);
 		EnhancedInputComponent->BindAction(WalkAction, ETriggerEvent::Started, this, &ASlashCharacter::Walk);
 		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::Started, this, &ASlashCharacter::LeftShiftPressed);
 		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::None, this, &ASlashCharacter::LeftShiftReleased);
 		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Started, this, &ASlashCharacter::Dodge);
 		EnhancedInputComponent->BindAction(DrinkPotionAction, ETriggerEvent::Started, this, &ASlashCharacter::DrinkPotion);
+		EnhancedInputComponent->BindAction(RightMouseAction, ETriggerEvent::Started, this, &ASlashCharacter::RightMousePressed);
+		EnhancedInputComponent->BindAction(RightMouseAction, ETriggerEvent::None, this, &ASlashCharacter::RightMouseReleased);
 	}
 }
 
@@ -121,6 +123,8 @@ float ASlashCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damage
 
 void ASlashCharacter::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 {
+	if (ActionState == EActionState::EAS_Dodge) Tags.Remove("Dodging");
+
 	Super::GetHit_Implementation(ImpactPoint, Hitter);
 
 	if (Attributes && Attributes->GetHealthPercent() > 0.f) 
@@ -212,7 +216,7 @@ void ASlashCharacter::Walk()
 	WalkMode = !WalkMode;
 }
 
-void ASlashCharacter::EKeyPressed()
+void ASlashCharacter::EquipKeyPressed()
 {
 	if (AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem))
 		EquipWeapon(OverlappingWeapon);
@@ -224,19 +228,33 @@ void ASlashCharacter::EKeyPressed()
 
 void ASlashCharacter::Jump()
 {
-	if (IsUnoccupied() && !GetCharacterMovement()->IsFalling() ) Super::Jump();
+	if (IsUnoccupied() && !GetCharacterMovement()->IsFalling()) Super::Jump();
 }
 
 void ASlashCharacter::Attack()
 {
 	if (CanAttack())
 	{
-		if (Attributes && EquippedWeapon)
-			Attributes->UseStamina(EquippedWeapon->GetStaminaAttackCost());
+		if (CharacterState == ECharacterState::ECS_EquippedBow)
+		{
+			if (CanFireArrow()) 
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Firing Arrow"));
+				// Spawn Arrow
+				// Play Fire Arrow Montage
+				// ActionState = EActionState::EAS_Attacking;
+				return;
+			}
+		}
+		else
+		{
+			if (Attributes && EquippedWeapon)
+				Attributes->UseStamina(EquippedWeapon->GetStaminaAttackCost());
+			SetHUDStamina();
 
-		SetHUDStamina();
-		PlayAttackMontage(HoldingHeavyAttack);
-		ActionState = EActionState::EAS_Attacking;
+			PlayAttackMontage(HoldingHeavyAttack);
+			ActionState = EActionState::EAS_Attacking;
+		}
 	} 
 	else if (CanArm())
 	{
@@ -281,11 +299,41 @@ void ASlashCharacter::DrinkPotion()
 			Inventory->UseHealthPotion();
 			Attributes->Heal(Inventory->GetHealthPotionRecovery());
 			SetHUDHealth();
+			SetHUDPotionCount();
+
 			if (EquipMontage) PlayMontageSection(EquipMontage, FName("DrinkPotion"));
 			ActionState = EActionState::EAS_EquippingWeapon;
 			ANCB_SetPotionVisibility(true);
-			SetHUDPotionCount();
 		}
+	}
+}
+
+void ASlashCharacter::RightMousePressed()
+{
+	if (!CanAttack()) return;
+
+	if (CharacterState == ECharacterState::ECS_EquippedBow)
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		bUseControllerRotationYaw = true;
+
+		bAimingBow = true;
+		// Zoom in camera to OverTheShoulder
+		// Set crosshair visible
+	}
+	//else if (CharacterState == ECharacterState::ECS_MeeleeWeapon) Block();
+}
+
+void ASlashCharacter::RightMouseReleased()
+{
+	if (bAimingBow)
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		bUseControllerRotationYaw = false;
+
+		bAimingBow = false;
+		// Set crosshair invisible
+		// Zoom out camera to Third Person
 	}
 }
 
@@ -423,6 +471,11 @@ void ASlashCharacter::ANCB_SetPotionVisibility(bool Visiblity)
 	if (!Visiblity) ActionState = EActionState::EAS_Unoccupied;
 }
 
+void ASlashCharacter::ANCB_FireArrowEnd()
+{
+	FiringArrow = false;
+}
+
 bool ASlashCharacter::IsUnoccupied() const
 {
 	return ActionState == EActionState::EAS_Unoccupied;
@@ -441,6 +494,9 @@ void ASlashCharacter::SetCharacterStateOnWeapon()
 	case (EWeaponType::EWT_GreatSword):
 		CharacterState = ECharacterState::ECS_EquippedTwoHandedWeapon;
 		break;
+	case (EWeaponType::EWT_Bow):
+		CharacterState = ECharacterState::ECS_EquippedBow;
+		break;
 	default:
 		CharacterState = ECharacterState::ECS_EquippedOneHandedWeapon;
 		break;
@@ -456,9 +512,9 @@ void ASlashCharacter::InitializeSlashOverlay(APlayerController* PlayerController
 		{
 			SetHUDHealth();
 			SetHUDStamina();
+			SetHUDPotionCount();
 			SlashOverlay->SetGold(Attributes->GetGold());
 			SlashOverlay->SetSouls(Attributes->GetSouls());
-			SetHUDPotionCount();
 		}
 	}
 }
@@ -473,6 +529,11 @@ void ASlashCharacter::SetHUDStamina()
 {
 	if (SlashOverlay && Attributes)
 		SlashOverlay->SetStaminaBarPercent(Attributes->GetStaminaPercent());
+}
+
+bool ASlashCharacter::CanFireArrow() const
+{
+	return bAimingBow && !FiringArrow; // && HasArrowAmmo
 }
 
 void ASlashCharacter::SetHUDPotionCount()

@@ -1,7 +1,7 @@
 #include "Characters/SlashAnimInstance.h"
 #include "Characters/SlashCharacter.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "Kismet/KismetMathLibrary.h"
+// #include "GameFramework/CharacterMovementComponent.h"
+// #include "Kismet/KismetMathLibrary.h"
 
 void USlashAnimInstance::NativeInitializeAnimation()
 {
@@ -12,6 +12,7 @@ void USlashAnimInstance::NativeInitializeAnimation()
 	if (SlashCharacter) SlashCharacterMovement = SlashCharacter->GetCharacterMovement();
 }
 
+	/*
 void USlashAnimInstance::NativeUpdateAnimation(float DeltaTime)
 {
 	Super::NativeUpdateAnimation(DeltaTime);
@@ -25,3 +26,4 @@ void USlashAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		DeathPose = SlashCharacter->GetDeathPose();
 	}
 }
+	*/

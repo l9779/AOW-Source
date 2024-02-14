@@ -23,10 +23,12 @@ class ADVENTUREOPENWORLD_API ASlashCharacter : public ABaseCharacter, public IPi
 public:
 	ASlashCharacter();
 
+	/** <AActor> */
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override; 
+	/** </AActor> */
 
-	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override; /** <IHitInterface/> */
 	
 	/** <IPickupInterface> */
@@ -44,13 +46,15 @@ protected:
 	void ClearMovement(const FInputActionValue& Value);
 	void LookAround(const FInputActionValue& Value);
 	void Walk();
-	void EKeyPressed();
+	void EquipKeyPressed();
 	virtual void Jump() override; /** <ACharacter/> */
 	virtual void Attack() override; /** <ABaseCharacter/> */
 	void LeftShiftPressed();
 	void LeftShiftReleased();
 	void Dodge();
 	void DrinkPotion();
+	void RightMousePressed();
+	void RightMouseReleased();
 
 	/** Weapon and Combat Functions */
 	/** <ABaseCharacter> */
@@ -81,27 +85,35 @@ protected:
 	void ANCB_HitReactEnd();
 	UFUNCTION(BlueprintCallable)
 	void ANCB_SetPotionVisibility(bool Visiblity);
+	UFUNCTION(BlueprintCallable)
+	void ANCB_FireArrowEnd();
 
-	UPROPERTY(EditAnywhere, Category = "Input")
+	/** Input Actions */
+	UPROPERTY(EditAnywhere, Category = "Input|Mapping Context")
 	TObjectPtr<UInputMappingContext> SlashMappingContext;	
-	UPROPERTY(EditAnywhere, Category = "Input")
+
+	UPROPERTY(EditAnywhere, Category = "Input|Movement")
 	TObjectPtr<UInputAction> MovementAction;
-	UPROPERTY(EditAnywhere, Category = "Input")
+	UPROPERTY(EditAnywhere, Category = "Input|Movement")
 	TObjectPtr<UInputAction> LookAroundAction;
-	UPROPERTY(EditAnywhere, Category = "Input")
+	UPROPERTY(EditAnywhere, Category = "Input|Movement")
 	TObjectPtr<UInputAction> WalkAction;
-	UPROPERTY(EditAnywhere, Category = "Input")
+	UPROPERTY(EditAnywhere, Category = "Input|Movement")
 	TObjectPtr<UInputAction> JumpAction;
-	UPROPERTY(EditAnywhere, Category = "Input")
+
+	UPROPERTY(EditAnywhere, Category = "Input|Actions")
 	TObjectPtr<UInputAction> EquipAction;
-	UPROPERTY(EditAnywhere, Category = "Input")
-	TObjectPtr<UInputAction> AttackAction;
-	UPROPERTY(EditAnywhere, Category = "Input")
-	TObjectPtr<UInputAction> HeavyAttackAction;
-	UPROPERTY(EditAnywhere, Category = "Input")
-	TObjectPtr<UInputAction> DodgeAction;
-	UPROPERTY(EditAnywhere, Category = "Input")
+	UPROPERTY(EditAnywhere, Category = "Input|Actions")
 	TObjectPtr<UInputAction> DrinkPotionAction;
+	UPROPERTY(EditAnywhere, Category = "Input|Actions")
+	TObjectPtr<UInputAction> DodgeAction;
+
+	UPROPERTY(EditAnywhere, Category = "Input|Combat")
+	TObjectPtr<UInputAction> AttackAction;
+	UPROPERTY(EditAnywhere, Category = "Input|Combat")
+	TObjectPtr<UInputAction> HeavyAttackAction;
+	UPROPERTY(EditAnywhere, Category = "Input|Combat")
+	TObjectPtr<UInputAction> RightMouseAction;
 
 	/** Input Variables  */
 	bool HoldingHeavyAttack = false; /* Set by input callback */
@@ -110,8 +122,13 @@ protected:
 	/* Set by pressing movement inputs, to orient attack rotation */
 	float InputY = 0.f;
 	float InputX = 0.f;
+	/** Set true once fires arrow, set to false ANCB at end of fire arrow montage */
+	bool FiringArrow = false;
+	/** Set true if CharacterState == ECS_Equipped Bow and holding right mouse button */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat|Bow")
+	bool bAimingBow = false; 
 
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInventoryComponent> Inventory;
 
 	/* End of Protected */
@@ -122,6 +139,7 @@ private:
 	void SetHUDPotionCount();
 	void SetHUDHealth();
 	void SetHUDStamina();
+	bool CanFireArrow () const;
 
 	/** Character Components */
 	UPROPERTY(VisibleAnywhere)
@@ -139,11 +157,15 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	TObjectPtr<UAnimMontage> EquipMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages|Attack")
+	TObjectPtr<UAnimMontage> FireBowMontage;
 
-	ECharacterState CharacterState; /* Set by state of equipped weapon */
-
-	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	EActionState ActionState; /* Set by different action character can peform(equipping weapon, attacks, unnocupied) */
+	/**	 Set by state of equipped weapon */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "States", meta = (AllowPrivateAccess = true))
+	ECharacterState CharacterState; 
+	/** Set by different action character can peform(equipping weapon, attacks, unnocupied) */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "States", meta = (AllowPrivateAccess = "true"))
+	EActionState ActionState; 
 	
 	UPROPERTY(VisibleInstanceOnly)
 	TObjectPtr<AItem> OverlappingItem;

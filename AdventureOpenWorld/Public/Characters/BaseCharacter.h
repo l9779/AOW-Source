@@ -6,8 +6,6 @@
 #include "Characters/CharacterTypes.h"
 #include "BaseCharacter.generated.h"
 
-class AWeapon;
-
 UCLASS()
 class ADVENTUREOPENWORLD_API ABaseCharacter : public ACharacter, public IHitInterface
 {
@@ -65,41 +63,41 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	double WarpTargetDistance;
 
-	UPROPERTY(VisibleAnywhere, Category = Weapon)
-	TObjectPtr<AWeapon> EquippedWeapon;
+	UPROPERTY(VisibleAnywhere, Category = "Combat|Weapon")
+	TObjectPtr<class AWeapon> EquippedWeapon;
 
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UAttributeComponent> Attributes;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "States")
 	TEnumAsByte<EDeathPose> DeathPose;
 
 	/* End of Protected */
 private:
-	UPROPERTY(EditAnywhere, Category = "Combat")
+	UPROPERTY(EditAnywhere, Category = "Combat|Sound")
 	TObjectPtr<USoundBase> HitSound;
-	UPROPERTY(EditAnywhere, Category = "Combat")
+	UPROPERTY(EditAnywhere, Category = "Combat|VFX")
 	TObjectPtr<UParticleSystem> HitParticles;
 
 	/** Animation Montages */
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UPROPERTY(EditDefaultsOnly, Category = "Montages|Attack")
 	TObjectPtr<UAnimMontage> DefaultAttackMontage;
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UPROPERTY(EditDefaultsOnly, Category = "Montages|Attack")
 	TObjectPtr<UAnimMontage> SwordAttackMontage;
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UPROPERTY(EditDefaultsOnly, Category = "Montages|Attack")
 	TObjectPtr<UAnimMontage> GreatSwordAttackMontage;
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UPROPERTY(EditDefaultsOnly, Category = "Montages|Combat")
 	TObjectPtr<UAnimMontage> HitReactMontage;
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UPROPERTY(EditDefaultsOnly, Category = "Montages|Combat")
 	TObjectPtr<UAnimMontage> DeathMontage;
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UPROPERTY(EditDefaultsOnly, Category = "Montages|Combat")
 	TObjectPtr<UAnimMontage> DodgeMontage;
 
-	UPROPERTY(EditAnywhere, Category = "Combat")
+	UPROPERTY(EditAnywhere, Category = "Combat|Montage Name Sections")
 	TArray<FName> AttackMontageSections;
-	UPROPERTY(EditAnywhere, Category = "Combat")
+	UPROPERTY(EditAnywhere, Category = "Combat|Montage Name Sections")
 	TArray<FName> HeavyAttackMontageSections;
-	UPROPERTY(EditAnywhere, Category = "Combat")
+	UPROPERTY(EditAnywhere, Category = "Combat|Montage Name Sections")
 	TArray<FName> DeathMontageSections;
 
 	/* End of Private */

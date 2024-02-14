@@ -12,21 +12,42 @@ class ADVENTUREOPENWORLD_API USlashAnimInstance : public UAnimInstance
 
 public:
 	virtual void NativeInitializeAnimation() override;
-	virtual void NativeUpdateAnimation(float DeltaTime) override;
+	//virtual void NativeUpdateAnimation(float DeltaTime) override;
 
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<class ASlashCharacter> SlashCharacter;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	UPROPERTY(BlueprintReadOnly, Category = "Components")
 	TObjectPtr<class UCharacterMovementComponent> SlashCharacterMovement;
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+
+	UPROPERTY(BlueprintReadWrite, Category = "Movement")
+	FVector Velocity;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Movement")
 	float GroundSpeed;
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	UPROPERTY(BlueprintReadWrite, Category = "Movement|Bow")
+	float YawOffset;
+	UPROPERTY(BlueprintReadWrite, Category = "Movement|Bow")
+	float RootYawOffset;
+	UPROPERTY(BlueprintReadWrite, Category = "Movement|Bow")
+	float DistanceCurve;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Movement|Bow")
+	FRotator BaseAimRotation;
+	UPROPERTY(BlueprintReadWrite, Category = "Movement|Bow")
+	FRotator MovingRotation;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Movement|Bools")
 	bool isFalling;
-	UPROPERTY(BlueprintReadOnly, Category = "Movement|Character States")
+	UPROPERTY(BlueprintReadWrite, Category = "Movement|Bools")
+	bool bShouldMove;
+	UPROPERTY(BlueprintReadWrite, Category = "Combat")
+	bool IsAiming;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Character States")
 	ECharacterState CharacterState;
-	UPROPERTY(BlueprintReadOnly, Category = "Movement|Character States")
+	UPROPERTY(BlueprintReadWrite, Category = "Character States")
 	EActionState ActionState;
-	UPROPERTY(BlueprintReadOnly, Category = "Movement|Character States")
+	UPROPERTY(BlueprintReadWrite, Category = "Character States")
 	TEnumAsByte<EDeathPose> DeathPose;
 };

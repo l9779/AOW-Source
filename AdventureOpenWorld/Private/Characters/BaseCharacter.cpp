@@ -2,7 +2,7 @@
 #include "Characters/CharacterTypes.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Items/Weapons/Weapon.h"
+#include "Items/Weapons/MeeleeWeapon.h"
 #include "Components/AttributeComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -208,10 +208,13 @@ void ABaseCharacter::DisableMeshCollision()
 
 void ABaseCharacter::ANCB_SetWeaponBoxCollisionEnabled(ECollisionEnabled::Type CollisionEnabled)
 {
-	if (EquippedWeapon && EquippedWeapon->GetWeaponBox())
+	if (AMeeleeWeapon* EquippedMeeleeWeapon = Cast<AMeeleeWeapon>(EquippedWeapon))
 	{
-		EquippedWeapon->GetWeaponBox()->SetCollisionEnabled(CollisionEnabled);
-		EquippedWeapon->ClearIgnoreActors();
+		if (EquippedMeeleeWeapon->GetWeaponBox())
+		{
+			EquippedMeeleeWeapon->ClearIgnoreActors();
+			EquippedMeeleeWeapon->GetWeaponBox()->SetCollisionEnabled(CollisionEnabled);
+		}
 	}
 }
 
