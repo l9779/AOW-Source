@@ -16,6 +16,9 @@ class ADVENTUREOPENWORLD_API AMeeleeWeapon : public AWeapon
 public:
 	AMeeleeWeapon();
 
+	virtual void Unequip() override;
+	virtual void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName) override;
+
 	void ClearIgnoreActors();
 protected:
 	virtual void BeginPlay() override;

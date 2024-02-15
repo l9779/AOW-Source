@@ -6,12 +6,12 @@
 #include "GameFramework/Actor.h"
 #include "Item.generated.h"
 
-class USphereComponent;
-
+UENUM(BlueprintType)
 enum class EItemState : uint8
 {
-	EIS_Hovering,
-	EIS_Equipped
+	EIS_Hovering UMETA(DisplayName = "Hovering"),
+	EIS_Holstered UMETA(DisplayName = "Holstered"),
+	EIS_Equipped UMETA(DisplayName = "Equipped")
 };
 
 UCLASS()
@@ -48,10 +48,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> ItemMesh;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	EItemState ItemState = EItemState::EIS_Hovering;
 	
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USphereComponent> Sphere;
+	TObjectPtr<class USphereComponent> Sphere;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<class UNiagaraComponent> ItemEffect;
@@ -63,5 +64,8 @@ protected:
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sine Parameters", meta = (AllowPrivateAccess = "true"))
 	float RunningTime = 0.f;
+
+public:
+	FORCEINLINE void SetItemState(EItemState NewState) { ItemState = NewState; }
 
 };

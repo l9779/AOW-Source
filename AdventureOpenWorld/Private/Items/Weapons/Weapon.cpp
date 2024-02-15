@@ -40,19 +40,16 @@ void AWeapon::PlayEquipSound()
 
 void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName)
 {
-	ItemMesh->AttachToComponent(
-		InParent, 
-		FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
-		InSocketName
-	);
+}
+
+void AWeapon::Attack()
+{
 }
 
 void AWeapon::Unequip()
 {
 	SetOwner(nullptr);
 	SetInstigator(nullptr);
-
-	ItemMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 
 	ItemState = EItemState::EIS_Hovering;
 

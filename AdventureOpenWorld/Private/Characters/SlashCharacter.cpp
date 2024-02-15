@@ -76,6 +76,10 @@ void ASlashCharacter::BeginPlay()
 
 	if (Attributes) GetCharacterMovement()->MaxWalkSpeed = Attributes->GetRunSpeed();
 
+	if (SpawnWithWeapon && SpawnWeaponClass && GetWorld())
+		if (AWeapon* SpawnedWeapon = GetWorld()->SpawnActor<AWeapon>(SpawnWeaponClass, GetActorTransform()))
+			EquipWeapon(SpawnedWeapon);
+
 }
 
 void ASlashCharacter::Tick(float DeltaTime)
@@ -88,6 +92,12 @@ void ASlashCharacter::Tick(float DeltaTime)
 	{
 		Attributes->RegenStamina(DeltaTime);
 		SetHUDStamina();
+	}
+
+	if (EquippedWeapon && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Bow)
+	{
+		ArrowSocketTransform = GetMesh()->GetSocketTransform(FName("RightHandArrowSocket"));
+		BowStringTranslation = GetMesh()->GetSocketLocation(FName("RightHandWeaponSocket"));
 	}
 }
 
@@ -239,10 +249,9 @@ void ASlashCharacter::Attack()
 		{
 			if (CanFireArrow()) 
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Firing Arrow"));
-				// Spawn Arrow
-				// Play Fire Arrow Montage
-				// ActionState = EActionState::EAS_Attacking;
+				EquippedWeapon->Attack();
+				if (FireBowMontage) PlayAnimMontage(FireBowMontage);
+				ActionState = EActionState::EAS_Attacking;
 				return;
 			}
 		}
@@ -318,6 +327,8 @@ void ASlashCharacter::RightMousePressed()
 		bUseControllerRotationYaw = true;
 
 		bAimingBow = true;
+		bGrabbingBowString = true;
+
 		// Zoom in camera to OverTheShoulder
 		// Set crosshair visible
 	}
@@ -332,6 +343,8 @@ void ASlashCharacter::RightMouseReleased()
 		bUseControllerRotationYaw = false;
 
 		bAimingBow = false;
+		bGrabbingBowString = false;
+
 		// Set crosshair invisible
 		// Zoom out camera to Third Person
 	}
@@ -403,7 +416,11 @@ void ASlashCharacter::EquipWeapon(AWeapon* Weapon)
 {
 	if (EquippedWeapon) EquippedWeapon->Unequip();
 
-	Weapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
+	FName SocketName("RightHandWeaponSocket");
+	if (Weapon->GetWeaponType() == EWeaponType::EWT_Bow)
+		SocketName = FName("LeftHandWeaponSocket");
+
+	Weapon->Equip(GetMesh(), SocketName, this, this);
 	EquippedWeapon = Weapon;
 	OverlappingItem = nullptr;
 
@@ -443,13 +460,20 @@ void ASlashCharacter::ANCB_DodgeEnd()
 
 void ASlashCharacter::ANCB_AttachWeaponToSheat()
 {
+	EquippedWeapon->SetItemState(EItemState::EIS_Holstered);
 	EquippedWeapon->AttachMeshToSocket(GetMesh(), FName("SpineSocket"));
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
 void ASlashCharacter::ANCB_AttachWeaponToHand()
 {
-	EquippedWeapon->AttachMeshToSocket(GetMesh(), FName("RightHandSocket"));
+	FName SocketName("RightHandWeaponSocket");
+
+	if (EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Bow)
+		SocketName = FName("LeftHandWeaponSocket");
+
+	EquippedWeapon->SetItemState(EItemState::EIS_Equipped);
+	EquippedWeapon->AttachMeshToSocket(GetMesh(), SocketName);
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
@@ -471,9 +495,14 @@ void ASlashCharacter::ANCB_SetPotionVisibility(bool Visiblity)
 	if (!Visiblity) ActionState = EActionState::EAS_Unoccupied;
 }
 
-void ASlashCharacter::ANCB_FireArrowEnd()
+void ASlashCharacter::ANCB_ReleaseBowString()
 {
-	FiringArrow = false;
+	bGrabbingBowString = false;
+}
+
+void ASlashCharacter::ANCB_GrabBowString()
+{
+	bGrabbingBowString = true;
 }
 
 bool ASlashCharacter::IsUnoccupied() const
@@ -533,7 +562,7 @@ void ASlashCharacter::SetHUDStamina()
 
 bool ASlashCharacter::CanFireArrow() const
 {
-	return bAimingBow && !FiringArrow; // && HasArrowAmmo
+	return bAimingBow; // && HasArrowAmmo
 }
 
 void ASlashCharacter::SetHUDPotionCount()

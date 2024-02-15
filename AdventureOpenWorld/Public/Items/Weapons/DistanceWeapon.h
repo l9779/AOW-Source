@@ -16,7 +16,19 @@ class ADVENTUREOPENWORLD_API ADistanceWeapon : public AWeapon
 public:
 	ADistanceWeapon();
 
+	virtual void Unequip() override;
+	virtual void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName) override;
+
+	virtual void Attack() override;
+	void FireArrow();
+
+protected:
+	UFUNCTION(BlueprintImplementableEvent)
+	void SpawnArrow(FTransform SpawnTransform);
+
 private:
+	FTransform GetArrowSpawnTransform(FVector& CrosshairWorldLocation, FVector& CrosshairImpactPoint) const;
+
 	UPROPERTY(EditDefaultsOnly)
 	USkeletalMeshComponent* SkeletalMesh;
 	

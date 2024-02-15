@@ -18,6 +18,22 @@ AMeeleeWeapon::AMeeleeWeapon()
 	BoxTraceEnd->SetupAttachment(GetRootComponent());
 }
 
+void AMeeleeWeapon::Unequip()
+{
+	Super::Unequip();
+
+	ItemMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+}
+
+void AMeeleeWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName)
+{
+	ItemMesh->AttachToComponent(
+		InParent,
+		FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
+		InSocketName
+	);
+}
+
 void AMeeleeWeapon::BeginPlay()
 {
 	Super::BeginPlay();

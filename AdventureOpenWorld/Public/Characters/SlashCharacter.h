@@ -14,6 +14,7 @@ class UCameraComponent;
 class UGroomComponent;
 class AItem;
 class UAnimMontage;
+class AWeapon;
 
 UCLASS()
 class ADVENTUREOPENWORLD_API ASlashCharacter : public ABaseCharacter, public IPickupInterface
@@ -86,7 +87,9 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void ANCB_SetPotionVisibility(bool Visiblity);
 	UFUNCTION(BlueprintCallable)
-	void ANCB_FireArrowEnd();
+	void ANCB_ReleaseBowString();
+	UFUNCTION(BlueprintCallable)
+	void ANCB_GrabBowString();
 
 	/** Input Actions */
 	UPROPERTY(EditAnywhere, Category = "Input|Mapping Context")
@@ -122,14 +125,17 @@ protected:
 	/* Set by pressing movement inputs, to orient attack rotation */
 	float InputY = 0.f;
 	float InputX = 0.f;
-	/** Set true once fires arrow, set to false ANCB at end of fire arrow montage */
-	bool FiringArrow = false;
 	/** Set true if CharacterState == ECS_Equipped Bow and holding right mouse button */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat|Bow")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Bow")
 	bool bAimingBow = false; 
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInventoryComponent> Inventory;
+
+	UPROPERTY(EditAnywhere, Category = "Inventory")
+	bool SpawnWithWeapon = false; 
+	UPROPERTY(EditAnywhere, Category = "Inventory")
+	TSubclassOf<AWeapon> SpawnWeaponClass;
 
 	/* End of Protected */
 private:		
@@ -147,13 +153,13 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCameraComponent> ViewCamera;
 
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UStaticMeshComponent> PotionMesh;
+
 	UPROPERTY(VisibleAnywhere, Category = "Hair Groom")
 	TObjectPtr<UGroomComponent> HeadHair;
 	UPROPERTY(VisibleAnywhere, Category = "Hair Groom")
 	TObjectPtr<UGroomComponent> EyebrownHair;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory", meta = (AllowPrivateAccess = true))
-	TObjectPtr<UStaticMeshComponent> PotionMesh;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	TObjectPtr<UAnimMontage> EquipMontage;
@@ -172,8 +178,23 @@ private:
 
 	TObjectPtr<class USlashOverlay> SlashOverlay;
 
+	/**
+	* Bow Variables
+	* Used to Modify transform of the bones of the bow when in use
+	*/
+	FTransform ArrowSocketTransform;
+	FVector BowStringTranslation;
+	bool bGrabbingBowString;
+
 	/* End of Private */
 public:
 	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }
 	FORCEINLINE EActionState GetActionState() const { return ActionState; }
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	FORCEINLINE FTransform GetArrowSocketTransform() const { return ArrowSocketTransform; }
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	FORCEINLINE FVector GetBowStringTranslation() const { return BowStringTranslation; }
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	FORCEINLINE bool GetGrabbingBowString() const { return bGrabbingBowString; }
 };

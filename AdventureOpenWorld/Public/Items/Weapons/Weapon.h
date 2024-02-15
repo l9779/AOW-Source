@@ -14,8 +14,10 @@ public:
 	AWeapon();
 
 	void Equip(USceneComponent* InParent, FName InSocketName, AActor* NewOwner, APawn* NewInstigator, bool bPlaySound = true);
-	void Unequip();
-	void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName);
+	virtual void Unequip();
+	virtual void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName);
+
+	virtual void Attack();
 
 protected:
 	//UFUNCTION(BlueprintImplementableEvent)
