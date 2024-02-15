@@ -119,14 +119,17 @@ protected:
 	TObjectPtr<UInputAction> RightMouseAction;
 
 	/** Input Variables  */
-	bool HoldingHeavyAttack = false; /* Set by input callback */
-	bool WalkMode = false; /* Set by input callback */
-	bool OrientAttackToRotation = false; /* Set by anim notify at the beginnig of attack animation */
-	/* Set by pressing movement inputs, to orient attack rotation */
+	/** Set by input callback */
+	bool HoldingHeavyAttack = false; 
+	/** Set by input callback */
+	bool WalkMode = false; 
+	/** Set by anim notify at the beginnig of attack animation */
+	bool OrientAttackToRotation = false; 
+	/** Set by pressing movement inputs, to orient attack rotation */
 	float InputY = 0.f;
 	float InputX = 0.f;
-	/** Set true if CharacterState == ECS_Equipped Bow and holding right mouse button */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Bow")
+	/** Set true if CharacterState == ECS_Equipped Bow and holding right mouse button watched on ABP */
+	UPROPERTY(BlueprintReadOnly)
 	bool bAimingBow = false; 
 
 	UPROPERTY(VisibleAnywhere)
@@ -145,12 +148,15 @@ private:
 	void SetHUDPotionCount();
 	void SetHUDHealth();
 	void SetHUDStamina();
-	bool CanFireArrow () const;
+	void SetCrosshairVisibility(ESlateVisibility SlateVisiblity);
+	bool CanFireArrow() const;
+	void SetCameraMode(bool AimingMode);
+	bool CameraNeedsUpdate() const;
 
 	/** Character Components */
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> SpringArm;
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UCameraComponent> ViewCamera;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -184,7 +190,23 @@ private:
 	*/
 	FTransform ArrowSocketTransform;
 	FVector BowStringTranslation;
-	bool bGrabbingBowString;
+
+	/** Camera Variables */
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Properties")
+	float DefaultBoomLength; 
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Properties")
+	FVector DefaultBoomOffset;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Properties")
+	FVector AimingBoomOffset;
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Properties")
+	float AimingBoomLength;
+
+	float TargetBoomLength;
+	FVector TargetBoomOffset;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Properties")
+	float CameraZoomSpeed;
 
 	/* End of Private */
 public:
@@ -195,6 +217,4 @@ public:
 	FORCEINLINE FTransform GetArrowSocketTransform() const { return ArrowSocketTransform; }
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	FORCEINLINE FVector GetBowStringTranslation() const { return BowStringTranslation; }
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	FORCEINLINE bool GetGrabbingBowString() const { return bGrabbingBowString; }
 };

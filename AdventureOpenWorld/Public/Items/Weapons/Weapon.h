@@ -17,8 +17,6 @@ public:
 	virtual void Unequip();
 	virtual void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName);
 
-	virtual void Attack();
-
 protected:
 	//UFUNCTION(BlueprintImplementableEvent)
 	//void CreateFields(const FVector& FieldLocation);  transfered to breakable actor

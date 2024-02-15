@@ -19,17 +19,28 @@ public:
 	virtual void Unequip() override;
 	virtual void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName) override;
 
-	virtual void Attack() override;
 	void FireArrow();
 
+	void StringPulled(bool isPulled);
+
 protected:
-	UFUNCTION(BlueprintImplementableEvent)
 	void SpawnArrow(FTransform SpawnTransform);
 
+	UPROPERTY(BlueprintReadOnly)
+	bool bStringPulled = false;
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsAimed = false;
+	
 private:
 	FTransform GetArrowSpawnTransform(FVector& CrosshairWorldLocation, FVector& CrosshairImpactPoint) const;
+	void SetArrowVisibility(bool Visible);
 
 	UPROPERTY(EditDefaultsOnly)
 	USkeletalMeshComponent* SkeletalMesh;
-	
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class AProjectile> ArrowClass;
+
+public:
+	FORCEINLINE void SetStringPulled(bool IsPulled) { bStringPulled = IsPulled; }
+	FORCEINLINE void SetIsAimed(bool IsAimed) { bIsAimed = IsAimed; }
 };

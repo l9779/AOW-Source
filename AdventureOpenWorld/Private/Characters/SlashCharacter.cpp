@@ -9,6 +9,7 @@
 #include "Components/AttributeComponent.h"
 #include "Components/InventoryComponent.h"
 #include "Items/Weapons/Weapon.h"
+#include "Items/Weapons/DistanceWeapon.h"
 #include "Items/Pickups/Soul.h"
 #include "Items/Pickups/Treasure.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -17,7 +18,10 @@
 
 ASlashCharacter::ASlashCharacter():
 	CharacterState(ECharacterState::ECS_Unequipped),
-	ActionState(EActionState::EAS_Unoccupied)
+	ActionState(EActionState::EAS_Unoccupied),
+	DefaultBoomLength(400.f), DefaultBoomOffset(0.f),
+	AimingBoomOffset(0.f, 70.f, 0.f), AimingBoomLength(100.f),
+	CameraZoomSpeed(10.f)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -36,7 +40,7 @@ ASlashCharacter::ASlashCharacter():
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(GetRootComponent());
-	SpringArm->TargetArmLength = 300.f;
+	SpringArm->TargetArmLength = DefaultBoomLength;
 	SpringArm->bUsePawnControlRotation = true;
 
 	ViewCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ViewCamera"));
@@ -80,6 +84,8 @@ void ASlashCharacter::BeginPlay()
 		if (AWeapon* SpawnedWeapon = GetWorld()->SpawnActor<AWeapon>(SpawnWeaponClass, GetActorTransform()))
 			EquipWeapon(SpawnedWeapon);
 
+	SetCameraMode(bAimingBow);
+
 }
 
 void ASlashCharacter::Tick(float DeltaTime)
@@ -99,6 +105,15 @@ void ASlashCharacter::Tick(float DeltaTime)
 		ArrowSocketTransform = GetMesh()->GetSocketTransform(FName("RightHandArrowSocket"));
 		BowStringTranslation = GetMesh()->GetSocketLocation(FName("RightHandWeaponSocket"));
 	}
+
+	if (CameraNeedsUpdate())
+	{
+		SpringArm->TargetArmLength =
+			FMath::FInterpTo(SpringArm->TargetArmLength, TargetBoomLength, DeltaTime, CameraZoomSpeed);
+		SpringArm->TargetOffset =
+			FMath::VInterpTo(SpringArm->TargetOffset, TargetBoomOffset, DeltaTime, CameraZoomSpeed);
+	}
+
 }
 
 void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -245,15 +260,13 @@ void ASlashCharacter::Attack()
 {
 	if (CanAttack())
 	{
-		if (CharacterState == ECharacterState::ECS_EquippedBow)
+		if (ADistanceWeapon* BowWeapon = Cast<ADistanceWeapon>(EquippedWeapon))
 		{
-			if (CanFireArrow()) 
-			{
-				EquippedWeapon->Attack();
-				if (FireBowMontage) PlayAnimMontage(FireBowMontage);
-				ActionState = EActionState::EAS_Attacking;
-				return;
-			}
+			if (!CanFireArrow()) return;
+
+			BowWeapon->FireArrow();
+			if (FireBowMontage) PlayAnimMontage(FireBowMontage);	
+			ActionState = EActionState::EAS_Attacking;	
 		}
 		else
 		{
@@ -321,16 +334,17 @@ void ASlashCharacter::RightMousePressed()
 {
 	if (!CanAttack()) return;
 
-	if (CharacterState == ECharacterState::ECS_EquippedBow)
+	if (ADistanceWeapon* BowWeapon = Cast<ADistanceWeapon>(EquippedWeapon))
 	{
+		bAimingBow = true;
 		GetCharacterMovement()->bOrientRotationToMovement = false;
 		bUseControllerRotationYaw = true;
 
-		bAimingBow = true;
-		bGrabbingBowString = true;
+		BowWeapon->StringPulled(true);
+		BowWeapon->SetIsAimed(true);
 
-		// Zoom in camera to OverTheShoulder
-		// Set crosshair visible
+		SetCameraMode(true);
+		SetCrosshairVisibility(ESlateVisibility::Visible);
 	}
 	//else if (CharacterState == ECharacterState::ECS_MeeleeWeapon) Block();
 }
@@ -339,14 +353,18 @@ void ASlashCharacter::RightMouseReleased()
 {
 	if (bAimingBow)
 	{
+		bAimingBow = false;
 		GetCharacterMovement()->bOrientRotationToMovement = true;
 		bUseControllerRotationYaw = false;
 
-		bAimingBow = false;
-		bGrabbingBowString = false;
+		if (ADistanceWeapon* BowWeapon = Cast<ADistanceWeapon>(EquippedWeapon))
+		{
+			BowWeapon->SetStringPulled(false); // does not set arrow invisble
+			BowWeapon->SetIsAimed(false);
+		}
 
-		// Set crosshair invisible
-		// Zoom out camera to Third Person
+		SetCameraMode(false);
+		SetCrosshairVisibility(ESlateVisibility::Hidden);
 	}
 }
 
@@ -497,12 +515,14 @@ void ASlashCharacter::ANCB_SetPotionVisibility(bool Visiblity)
 
 void ASlashCharacter::ANCB_ReleaseBowString()
 {
-	bGrabbingBowString = false;
+	if (ADistanceWeapon* BowWeapon = Cast<ADistanceWeapon>(EquippedWeapon))
+		BowWeapon->StringPulled(false);
 }
 
 void ASlashCharacter::ANCB_GrabBowString()
 {
-	bGrabbingBowString = true;
+	if (ADistanceWeapon* BowWeapon = Cast<ADistanceWeapon>(EquippedWeapon))
+		BowWeapon->StringPulled(true);
 }
 
 bool ASlashCharacter::IsUnoccupied() const
@@ -542,6 +562,7 @@ void ASlashCharacter::InitializeSlashOverlay(APlayerController* PlayerController
 			SetHUDHealth();
 			SetHUDStamina();
 			SetHUDPotionCount();
+			SetCrosshairVisibility(ESlateVisibility::Hidden);
 			SlashOverlay->SetGold(Attributes->GetGold());
 			SlashOverlay->SetSouls(Attributes->GetSouls());
 		}
@@ -560,9 +581,33 @@ void ASlashCharacter::SetHUDStamina()
 		SlashOverlay->SetStaminaBarPercent(Attributes->GetStaminaPercent());
 }
 
+void ASlashCharacter::SetCrosshairVisibility(ESlateVisibility SlateVisiblity)
+{
+	if (SlashOverlay) SlashOverlay->SetCrosshairVisibility(SlateVisiblity);
+}
+
 bool ASlashCharacter::CanFireArrow() const
 {
 	return bAimingBow; // && HasArrowAmmo
+}
+
+void ASlashCharacter::SetCameraMode(bool AimingMode)
+{
+	if (AimingMode)
+	{
+		TargetBoomLength = AimingBoomLength;
+		TargetBoomOffset = AimingBoomOffset;
+	}
+	else
+	{ 
+		TargetBoomLength = DefaultBoomLength;
+		TargetBoomOffset = DefaultBoomOffset;
+	}
+}
+
+bool ASlashCharacter::CameraNeedsUpdate() const
+{
+	return SpringArm->TargetArmLength != TargetBoomLength || SpringArm->TargetOffset != TargetBoomOffset;
 }
 
 void ASlashCharacter::SetHUDPotionCount()

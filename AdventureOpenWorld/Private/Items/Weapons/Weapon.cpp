@@ -42,10 +42,6 @@ void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocke
 {
 }
 
-void AWeapon::Attack()
-{
-}
-
 void AWeapon::Unequip()
 {
 	SetOwner(nullptr);

@@ -8,6 +8,7 @@
 
 class UProgressBar;
 class UTextBlock;
+class UImage;
 
 /**
  * Gameplay Overlay
@@ -25,7 +26,8 @@ public:
 	void SetGold(int32 Gold);
 	void SetSouls(int32 Souls);
 	void SetPotionCount(int32 PotionAmmount);
-	
+	void SetCrosshairVisibility(ESlateVisibility SlateVisiblity);
+
 private:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> HealthProgressBar;
@@ -37,4 +39,6 @@ private:
 	TObjectPtr<UTextBlock> SoulsCountText;
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> PotionCountText;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UImage> Crosshair;
 };

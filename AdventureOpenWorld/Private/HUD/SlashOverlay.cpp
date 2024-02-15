@@ -1,6 +1,7 @@
 #include "HUD/SlashOverlay.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "Components/Image.h"
 
 void USlashOverlay::SetHealthBarPercent(float Percent)
 {
@@ -28,4 +29,9 @@ void USlashOverlay::SetPotionCount(int32 PotionAmmount)
 {
 	if (PotionCountText)
 		PotionCountText->SetText(FText::FromString(FString::Printf(TEXT("%d"), PotionAmmount)));
+}
+
+void USlashOverlay::SetCrosshairVisibility(ESlateVisibility SlateVisiblity)
+{
+	if (Crosshair) Crosshair->SetVisibility(SlateVisiblity);
 }
