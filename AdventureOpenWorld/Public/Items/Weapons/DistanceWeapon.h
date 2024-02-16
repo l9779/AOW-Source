@@ -36,7 +36,7 @@ private:
 	void SetArrowVisibility(bool Visible);
 
 	UPROPERTY(EditDefaultsOnly)
-	USkeletalMeshComponent* SkeletalMesh;
+	TObjectPtr<USkeletalMeshComponent> SkeletalMesh;
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class AProjectile> ArrowClass;
 

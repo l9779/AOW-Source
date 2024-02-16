@@ -20,24 +20,27 @@ protected:
 	void OnConstruction(const FTransform& Transform) override;
 
 	UPROPERTY(EditDefaultsOnly)
-	USceneComponent* RootScene;
+	TObjectPtr<USceneComponent> RootScene;
 	UPROPERTY(EditDefaultsOnly)
-	UStaticMeshComponent* Mesh;
+	TObjectPtr<UStaticMeshComponent> Mesh;
 	UPROPERTY(EditDefaultsOnly)
-	class UBoxComponent* BoxVolume;
+	TObjectPtr<class UBoxComponent> BoxVolume;
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
-	class UProjectileMovementComponent* ProjectileMovementComponent;
+	TObjectPtr<class UProjectileMovementComponent> ProjectileMovementComponent;
 
 private:
+	void AttachArrow(AActor* OtherActor);
+
 	UPROPERTY(EditDefaultsOnly)
 	float Speed;
 	
+	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	float Damage;
 	
 	UPROPERTY(EditDefaultsOnly)
-	UParticleSystem* HitParticle;
+	TObjectPtr<UParticleSystem> HitParticle;
 
-	TArray<AActor*> ActorsToIgnore;
+	TArray<TObjectPtr<AActor>> ActorsToIgnore;
 
 public:
 	FORCEINLINE void SetDamage(float BowDamage) { Damage = BowDamage; }

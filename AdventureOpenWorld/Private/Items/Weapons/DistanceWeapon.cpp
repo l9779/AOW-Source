@@ -57,12 +57,14 @@ void ADistanceWeapon::StringPulled(bool isPulled)
 void ADistanceWeapon::SpawnArrow(FTransform SpawnTransform)
 {
 	if (ArrowClass && GetWorld())
-		if (AProjectile* Arrow = GetWorld()->SpawnActor<AProjectile>(ArrowClass, SpawnTransform))
-		{
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Instigator = GetInstigator();
+		SpawnParams.Owner = this;
+
+		if (AProjectile* Arrow = GetWorld()->SpawnActor<AProjectile>(ArrowClass, SpawnTransform, SpawnParams))
 			Arrow->SetDamage(Damage);
-			Arrow->SetOwner(this);
-			Arrow->SetInstigator(GetInstigator());
-		}
+	}
 }
 
 void ADistanceWeapon::SetArrowVisibility(bool Visible)

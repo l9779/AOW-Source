@@ -36,7 +36,7 @@ void AProjectile::BeginPlay()
 	ActorsToIgnore.Add(this);
 	ActorsToIgnore.Add(GetOwner());
 	ActorsToIgnore.Add(GetInstigator());
-	
+
 	BoxVolume->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnBoxOverlap);
 }
 
@@ -44,14 +44,29 @@ void AProjectile::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 {
 	if (ActorsToIgnore.Contains(OtherActor)) return;
 
+	if (IHitInterface* HitInterface = Cast<IHitInterface>(OtherActor))
+	{
+		UGameplayStatics::ApplyDamage(OtherActor, Damage, UGameplayStatics::GetPlayerController(this, 0), this, UDamageType::StaticClass());
+		HitInterface->Execute_GetHit(OtherActor, BoxVolume->GetComponentLocation(), UGameplayStatics::GetPlayerPawn(this, 0));
+	}	
+	else if (HitParticle)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitParticle, BoxVolume->GetComponentLocation());
+	}
+
+	AttachArrow(OtherActor);
+	ActorsToIgnore.Add(OtherActor);
+}
+
+void AProjectile::AttachArrow(AActor* OtherActor)
+{
 	ProjectileMovementComponent->StopMovementImmediately();
 	ProjectileMovementComponent->ProjectileGravityScale = 0.f;
-	AttachToActor(OtherActor, FAttachmentTransformRules::KeepWorldTransform);
-	BoxVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	if (HitParticle)
-		UGameplayStatics::SpawnEmitterAtLocation(
-			GetWorld(), 
-			HitParticle, 
-			BoxVolume->GetComponentLocation());
+	FAttachmentTransformRules TransformRules = FAttachmentTransformRules::KeepWorldTransform;
+	TransformRules.bWeldSimulatedBodies = true;
+	AttachToActor(OtherActor, TransformRules);
+
+	BoxVolume->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	SetLifeSpan(10.f);
 }
