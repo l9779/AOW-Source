@@ -46,8 +46,8 @@ void AProjectile::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 
 	if (IHitInterface* HitInterface = Cast<IHitInterface>(OtherActor))
 	{
-		UGameplayStatics::ApplyDamage(OtherActor, Damage, UGameplayStatics::GetPlayerController(this, 0), this, UDamageType::StaticClass());
-		HitInterface->Execute_GetHit(OtherActor, BoxVolume->GetComponentLocation(), UGameplayStatics::GetPlayerPawn(this, 0));
+		UGameplayStatics::ApplyDamage(OtherActor, Damage, GetInstigatorController(), this, UDamageType::StaticClass());
+		HitInterface->Execute_GetHit(OtherActor, BoxVolume->GetComponentLocation(), GetInstigator());
 	}	
 	else if (HitParticle)
 	{

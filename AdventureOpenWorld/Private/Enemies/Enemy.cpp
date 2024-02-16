@@ -24,7 +24,6 @@ AEnemy::AEnemy():
 	HealthBarWidgetComponent = CreateDefaultSubobject<UHealthBarComponent>(TEXT("Health Bar"));
 	HealthBarWidgetComponent->SetupAttachment(GetRootComponent());
 
-	GetCharacterMovement()->MaxWalkSpeed = 125.f;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
@@ -40,9 +39,9 @@ void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (PawnSensing) PawnSensing->OnSeePawn.AddDynamic(this, &AEnemy::PawnSeen);
-
 	InitializeEnemy();
+
+	if (PawnSensing) PawnSensing->OnSeePawn.AddDynamic(this, &AEnemy::PawnSeen);
 }
 
 void AEnemy::Tick(float DeltaTime)
