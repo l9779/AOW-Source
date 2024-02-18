@@ -35,44 +35,59 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UFUNCTION()
-	void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-	UFUNCTION()
-	void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 public:
 	virtual void Tick(float DeltaTime) override;
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override; /** <IHitInterface/> */
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void GetNextRoamingLocation();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI Navigation")
+	TObjectPtr<AActor> RoamingAreaPoint;
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Category = "AI Navigation")
+	FVector PatrolLocation;
+
 private:
 	void InitializeSettings();
 	void SetHealthBarPercent();
 	void SetHealthBarVisibility(bool Visibility);
-	bool IsAlive() const;
+	bool IsDead() const;
 	void Die();
 	void PlayHitSound(const FVector& ImpactLocation);
 	void SpawnHitParticle(const FVector& ImpactLocation);
+	void SetFleetingMode();
+	void SetRoamingMode();
+	void SetDeadMode();
+	void MoveToLocation(const FVector& Location);
+	bool IsInsideRange(FVector& Location, double Radius) const;
+	void PatrolTimerFinished();
+	void SetNextLocation();
 
 	UFUNCTION()
 	void PawnSeen(APawn* SeenPawn); // Callback for OnPawnSeen in UPawnSensingComponent
 
+	/** Distance that is safe fro prey to stop fleeting and go back to roaming */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "AI Navigation")
-	float PatrolRadius;
+	float SafeDistanceToHunter;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "AI Navigation")
+	float PatrolAreaRadius;
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true), Category = "AI Navigation")
 	float PatrolWaitMin;
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true), Category = "AI Navigation")
 	float PatrolWaitMax;
+	/** Radius used in IsInsideRange */
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true), Category = "AI Navigation")
+	float PatrolAcceptanceRadius;
+	/** Radius of Move to function, should be smaller than PatrolAcceptanceRadius */
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true), Category = "AI Navigation")
+	float MoveToLocationRadius;
 
-	UPROPERTY(VisibleInstanceOnly, Category = "AI Navigation")
-	TArray<TObjectPtr<AActor>> PatrolPoints;
-	UPROPERTY(VisibleInstanceOnly, Category = "AI Navigation")
-	TObjectPtr<AActor> PatrolPoint;
+	FTimerHandle PatrolTimer;
 
-	UPROPERTY(EditAnywhere, Category = "Components")
-	TObjectPtr<class UAttributeComponent> Attributes;
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	TObjectPtr<class USphereComponent> PatrolSphere;
+	TObjectPtr<class UAttributeComponent> Attributes;
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<class UHealthBarComponent> HealthBarWidgetComponent;
 	UPROPERTY(VisibleAnywhere, Category = "Components")

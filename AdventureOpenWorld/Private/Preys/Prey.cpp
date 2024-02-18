@@ -1,17 +1,21 @@
 #include "Preys/Prey.h"
 #include "AIController.h"
 #include "Components/AttributeComponent.h"
-#include "Components/SphereComponent.h"
 #include "Perception/PawnSensingComponent.h"
 #include "HUD/HealthBarComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/TargetPoint.h"
 #include "Kismet/GameplayStatics.h"
+#include "NavigationSystem.h"
+#include "AI/Navigation/NavigationTypes.h"
 
 #include "AdventureOpenWorld/DebugMacros.h"
 
 APrey::APrey():
-	PatrolRadius(2000.f), PatrolWaitMin(5.f), PatrolWaitMax(10.f)
+	SafeDistanceToHunter(500.f),
+	PatrolAreaRadius(1000.f),
+	PatrolWaitMin(5.f), PatrolWaitMax(10.f),
+	PatrolAcceptanceRadius(200.f), MoveToLocationRadius(50.f)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -21,11 +25,6 @@ APrey::APrey():
 	GetMesh()->SetGenerateOverlapEvents(true);
 
 	Attributes = CreateDefaultSubobject<UAttributeComponent>(TEXT("Attributes"));
-
-	PatrolSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Patrol Sphere"));
-	PatrolSphere->SetSphereRadius(PatrolRadius);
-	PatrolSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	PatrolSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Overlap);
 
 	HealthBarWidgetComponent = CreateDefaultSubobject<UHealthBarComponent>(TEXT("Health Bar"));
 	HealthBarWidgetComponent->SetupAttachment(GetRootComponent());
@@ -48,49 +47,60 @@ void APrey::BeginPlay()
 	EnemyController = Cast<AAIController>(GetController());
 
 	InitializeSettings();
+	GetNextRoamingLocation();
+	MoveToLocation(PatrolLocation);
 
 	if (PawnSensing) PawnSensing->OnSeePawn.AddDynamic(this, &APrey::PawnSeen);
-
-	PatrolSphere->OnComponentBeginOverlap.AddDynamic(this, &APrey::OnSphereOverlap);
-	PatrolSphere->OnComponentEndOverlap.AddDynamic(this, &APrey::OnSphereEndOverlap);
-}
-
-void APrey::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (Cast<ATargetPoint>(OtherActor)) PatrolPoints.Add(OtherActor);
-}
-
-void APrey::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if (Cast<ATargetPoint>(OtherActor)) PatrolPoints.Remove(OtherActor);
 }
 
 void APrey::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	DRAW_POINT_SingleFrame(GetActorLocation());
+	if (RoamingAreaPoint)
+		DRAW_SPHERE_SingleFrame(RoamingAreaPoint->GetActorLocation(), FColor::Green, PatrolAreaRadius)
+	
+	DRAW_SPHERE_SingleFrame(PatrolLocation, FColor::Red, 25.f)
 
-	// Seen Hunter || Hit by Hunter ?
-	// - PreyState = Fleeting
-	// - MaxWalkSpeed = RunSpeed
-	// - Run Away From Hunter()
-	// 
-	// Got Away From Hunter ?
-	// - PreyState = Roaming
-	// - MaxWalkSpeed = WalkSpeed
-	// - Back to Roaming()
-	// 
-	// Roaming ? 
-	// - ReachToPatrolPoint()
-	// - Wait
-	// - GetNextPatrolPoint()
-	// - MoveToPatrolPoint()
+	switch (PreyState)
+	{
+	case EPreyStates::EPS_Roaming:
+		if (IsInsideRange(PatrolLocation, PatrolAcceptanceRadius))
+		{
+			GetNextRoamingLocation();
+			const float WaitTime = FMath::RandRange(PatrolWaitMin, PatrolWaitMax);
+			GetWorldTimerManager().SetTimer(PatrolTimer, this, &APrey::PatrolTimerFinished, WaitTime);
+		} 
+		break;
+	case EPreyStates::EPS_Fleeting:
+		// Run Away from Hunter
+		break;
+	case EPreyStates::EPS_Dead:
+		PrimaryActorTick.bCanEverTick = false;
+		break;
+	default:
+		break;
+	}
+
 }
 
 float APrey::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	if (Attributes) Attributes->ReceiveDamage(DamageAmount);
+	if (Attributes)
+	{
+		Attributes->ReceiveDamage(DamageAmount);
+
+		if (Attributes->IsAlive())
+		{
+			SetHealthBarVisibility(true);
+			SetFleetingMode();
+			//HitReact();
+		}
+		else
+		{
+			Die();
+		}
+	}
 
 	return DamageAmount;
 }
@@ -98,29 +108,16 @@ float APrey::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, ACo
 void APrey::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 {
 	if (!Hunter) Hunter = Hitter;
-	
+		
 	SetHealthBarPercent();
 	PlayHitSound(ImpactPoint);
 	SpawnHitParticle(ImpactPoint);
-
-	if (IsAlive())
-	{
-		SetHealthBarVisibility(true);
-		//HitReact();
-	} 
-	else
-	{
-		SetHealthBarVisibility(false);
-		Die();
-	}
 }
 
 void APrey::InitializeSettings()
 {
-	if (Attributes) GetCharacterMovement()->MaxWalkSpeed = Attributes->GetWalkSpeed();
 	SetHealthBarPercent();
-	SetHealthBarVisibility(false);
-	PreyState = EPreyStates::EPS_Roaming;
+	SetRoamingMode();
 }
 
 void APrey::SetHealthBarPercent()
@@ -134,16 +131,15 @@ void APrey::SetHealthBarVisibility(bool Visibility)
 	if (HealthBarWidgetComponent) HealthBarWidgetComponent->SetVisibility(Visibility);
 }
 
-bool APrey::IsAlive() const
+bool APrey::IsDead() const
 {
-	return Attributes && Attributes->IsAlive();
+	return PreyState == EPreyStates::EPS_Dead;
 }
 
 void APrey::Die()
 {
-	SetHealthBarVisibility(false);
-	PreyState = EPreyStates::EPS_Dead;
 	// PlayDeathMontage();
+	SetDeadMode();
 }
 
 void APrey::PlayHitSound(const FVector& ImpactLocation)
@@ -156,16 +152,64 @@ void APrey::SpawnHitParticle(const FVector& ImpactLocation)
 	if (HitParticle) UGameplayStatics::SpawnEmitterAtLocation(this, HitParticle, ImpactLocation);
 }
 
+void APrey::SetFleetingMode()
+{
+	PreyState = EPreyStates::EPS_Fleeting;
+	if (Attributes) GetCharacterMovement()->MaxWalkSpeed = Attributes->GetRunSpeed();
+}
+
+void APrey::SetRoamingMode()
+{
+	PreyState = EPreyStates::EPS_Roaming;
+	SetHealthBarVisibility(false);
+	if (Attributes) GetCharacterMovement()->MaxWalkSpeed = Attributes->GetWalkSpeed();
+}
+
+void APrey::SetDeadMode()
+{
+	PreyState = EPreyStates::EPS_Dead;
+	SetHealthBarVisibility(false);
+}
+
+void APrey::MoveToLocation(const FVector& Location)
+{
+	if (!EnemyController) return;
+
+	FAIMoveRequest MoveRequest;
+	MoveRequest.SetGoalLocation(Location);
+	MoveRequest.SetAcceptanceRadius(MoveToLocationRadius);
+	EnemyController->MoveTo(MoveRequest);
+}
+
+bool APrey::IsInsideRange(FVector& Location, double Radius) const
+{
+	return (Location - GetActorLocation()).Size() <= Radius;
+}
+
+void APrey::PatrolTimerFinished()
+{
+	MoveToLocation(PatrolLocation);
+}
+
+void APrey::SetNextLocation()
+{
+	if (UNavigationSystemV1* Navigation = UNavigationSystemV1::CreateNavigationSystem(GetWorld()))
+	{
+		FNavLocation OutNavLocation;
+		if (Navigation->GetRandomPointInNavigableRadius(RoamingAreaPoint->GetActorLocation(), PatrolAreaRadius, OutNavLocation))
+			PatrolLocation = OutNavLocation.Location;
+	}
+}
+
 void APrey::PawnSeen(APawn* SeenPawn)
 {
-	if (SeenPawn->ActorHasTag(FName("Dead")) || Hunter) return;
+	if (SeenPawn->ActorHasTag(FName("Dead"))) return;
 
-	if (SeenPawn->ActorHasTag(FName("PlayerCharacter")))
+	if (!Hunter && SeenPawn->ActorHasTag(FName("PlayerCharacter")))
 	{
 		Hunter = SeenPawn;
-		PreyState = EPreyStates::EPS_Fleeting;
+		SetFleetingMode();
 		UE_LOG(LogTemp, Warning, TEXT("ICUY"));
-		// run away mode()
 	}
 }
 
