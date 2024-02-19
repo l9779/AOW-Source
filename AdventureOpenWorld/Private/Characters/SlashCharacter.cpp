@@ -110,8 +110,8 @@ void ASlashCharacter::Tick(float DeltaTime)
 	{
 		SpringArm->TargetArmLength =
 			FMath::FInterpTo(SpringArm->TargetArmLength, TargetBoomLength, DeltaTime, CameraZoomSpeed);
-		SpringArm->TargetOffset =
-			FMath::VInterpTo(SpringArm->TargetOffset, TargetBoomOffset, DeltaTime, CameraZoomSpeed);
+		SpringArm->SocketOffset =
+			FMath::VInterpTo(SpringArm->SocketOffset, TargetBoomOffset, DeltaTime, CameraZoomSpeed);
 	}
 
 }

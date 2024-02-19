@@ -62,7 +62,7 @@ private:
 	bool IsAttacking() const;
 	bool IsDead() const;
 	bool IsEngaged() const;
-	void ClearPatrolTimer();
+	void ClearPatrolTimer(); 
 	void StartAttackTimer();
 	void ClearAttackTimer();
 	bool InTargetRange(AActor* Target, double Radius) const;

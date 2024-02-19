@@ -4,18 +4,18 @@
 #include "Perception/PawnSensingComponent.h"
 #include "HUD/HealthBarComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Engine/TargetPoint.h"
 #include "Kismet/GameplayStatics.h"
-#include "NavigationSystem.h"
-#include "AI/Navigation/NavigationTypes.h"
+//#include "NavigationSystem.h"
+//#include "AI/Navigation/NavigationTypes.h"
 
 #include "AdventureOpenWorld/DebugMacros.h"
 
 APrey::APrey():
-	SafeDistanceToHunter(500.f),
+	HunterDangerRadius(500.f),
 	PatrolAreaRadius(1000.f),
 	PatrolWaitMin(5.f), PatrolWaitMax(10.f),
-	PatrolAcceptanceRadius(200.f), MoveToLocationRadius(50.f)
+	PatrolAcceptanceRadius(200.f), CombatFleetAcceptanceRadius(300.f),
+	MoveToLocationRadius(50.f)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -47,10 +47,14 @@ void APrey::BeginPlay()
 	EnemyController = Cast<AAIController>(GetController());
 
 	InitializeSettings();
-	GetNextRoamingLocation();
-	MoveToLocation(PatrolLocation);
 
 	if (PawnSensing) PawnSensing->OnSeePawn.AddDynamic(this, &APrey::PawnSeen);
+}
+
+void APrey::PlayAnimMontage(UAnimMontage* AnimMontage, float PlayRate) const
+{
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+		AnimInstance->Montage_Play(AnimMontage, PlayRate);
 }
 
 void APrey::Tick(float DeltaTime)
@@ -59,29 +63,38 @@ void APrey::Tick(float DeltaTime)
 
 	if (RoamingAreaPoint)
 		DRAW_SPHERE_SingleFrame(RoamingAreaPoint->GetActorLocation(), FColor::Green, PatrolAreaRadius)
-	
-	DRAW_SPHERE_SingleFrame(PatrolLocation, FColor::Red, 25.f)
 
-	switch (PreyState)
+	//DRAW_SPHERE_SingleFrame(MoveToTranslation, FColor::Red, 25.f);
+
+	if (IsDead()) return;
+
+	if (PreyState > EPreyStates::EPS_Dead)
 	{
-	case EPreyStates::EPS_Roaming:
-		if (IsInsideRange(PatrolLocation, PatrolAcceptanceRadius))
-		{
-			GetNextRoamingLocation();
-			const float WaitTime = FMath::RandRange(PatrolWaitMin, PatrolWaitMax);
-			GetWorldTimerManager().SetTimer(PatrolTimer, this, &APrey::PatrolTimerFinished, WaitTime);
-		} 
-		break;
-	case EPreyStates::EPS_Fleeting:
-		// Run Away from Hunter
-		break;
-	case EPreyStates::EPS_Dead:
-		PrimaryActorTick.bCanEverTick = false;
-		break;
-	default:
-		break;
+		if (Hunter)
+			CombatBehavior();
+		else
+			RoamingBehavior();
 	}
+}
 
+void APrey::CombatBehavior()
+{
+	FVector HunterLocation = Hunter->GetActorLocation();
+
+	if (IsInsideRange(HunterLocation, HunterDangerRadius))
+		RunAwayFromHunter();
+	else
+		ForgetHunter();
+}
+
+void APrey::RoamingBehavior()
+{
+	if (IsInsideRange(MoveToTranslation, PatrolAcceptanceRadius))
+	{
+		MoveToTranslation = GetRandomMoveToLocation();
+		const float WaitTime = FMath::RandRange(PatrolWaitMin, PatrolWaitMax);
+		GetWorldTimerManager().SetTimer(PatrolTimer, this, &APrey::MoveToTimerFinished, WaitTime);
+	}
 }
 
 float APrey::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -94,7 +107,7 @@ float APrey::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, ACo
 		{
 			SetHealthBarVisibility(true);
 			SetFleetingMode();
-			//HitReact();
+			if (HitReactMontage) PlayAnimMontage(HitReactMontage);
 		}
 		else
 		{
@@ -114,10 +127,50 @@ void APrey::GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter)
 	SpawnHitParticle(ImpactPoint);
 }
 
+/*
+void APrey::GetRandomMoveToLocation()
+{
+	if (UNavigationSystemV1* Navigation = UNavigationSystemV1::CreateNavigationSystem(GetWorld()))
+	{
+		FNavLocation OutNavLocation;
+		if (Navigation->GetRandomPointInNavigableRadius(RoamingAreaPoint->GetActorLocation(), PatrolAreaRadius, OutNavLocation))
+			MoveToTranslation = OutNavLocation.Location;
+	}
+}
+*/
+
+FVector APrey::GetNextFleetingLocation()
+{
+	TArray<FVector> PossibleLocations;
+	for (int32 i = 0; i < 5; i++) PossibleLocations.Add(GetRandomMoveToLocation());
+	
+	FVector FleetingLocation(0.f);
+	float FleetingLocationSize = FleetingLocation.Size();
+
+	for (const FVector& Location : PossibleLocations)
+	{
+		// Get PossibleLocation maginetude to hunter
+		float DistanceToHunterSize = (Location - Hunter->GetActorLocation()).Size();
+		
+		// if PossibleLocation maginetude is greater than Fleeting maginetude
+		// for the first loop will be always true
+		if (DistanceToHunterSize > FleetingLocationSize)
+		{
+			FleetingLocation = Location;
+			FleetingLocationSize = DistanceToHunterSize;
+			// Final Fleeting location will alway be the one furthest alway from hunter
+		}
+	}
+
+	return FleetingLocation;
+}
+
 void APrey::InitializeSettings()
 {
 	SetHealthBarPercent();
 	SetRoamingMode();
+	MoveToTranslation = GetRandomMoveToLocation();
+	MoveToLocation(MoveToTranslation);
 }
 
 void APrey::SetHealthBarPercent()
@@ -138,8 +191,8 @@ bool APrey::IsDead() const
 
 void APrey::Die()
 {
-	// PlayDeathMontage();
 	SetDeadMode();
+	if (DeathMontage) PlayAnimMontage(DeathMontage);
 }
 
 void APrey::PlayHitSound(const FVector& ImpactLocation)
@@ -168,6 +221,7 @@ void APrey::SetRoamingMode()
 void APrey::SetDeadMode()
 {
 	PreyState = EPreyStates::EPS_Dead;
+	Hunter = nullptr;
 	SetHealthBarVisibility(false);
 }
 
@@ -186,18 +240,23 @@ bool APrey::IsInsideRange(FVector& Location, double Radius) const
 	return (Location - GetActorLocation()).Size() <= Radius;
 }
 
-void APrey::PatrolTimerFinished()
+void APrey::MoveToTimerFinished()
 {
-	MoveToLocation(PatrolLocation);
+	MoveToLocation(MoveToTranslation);
 }
 
-void APrey::SetNextLocation()
+void APrey::ForgetHunter()
 {
-	if (UNavigationSystemV1* Navigation = UNavigationSystemV1::CreateNavigationSystem(GetWorld()))
+	Hunter = nullptr;
+	SetRoamingMode();
+}
+
+void APrey::RunAwayFromHunter()
+{
+	if (IsInsideRange(MoveToTranslation, CombatFleetAcceptanceRadius))
 	{
-		FNavLocation OutNavLocation;
-		if (Navigation->GetRandomPointInNavigableRadius(RoamingAreaPoint->GetActorLocation(), PatrolAreaRadius, OutNavLocation))
-			PatrolLocation = OutNavLocation.Location;
+		MoveToTranslation = GetNextFleetingLocation();
+		MoveToLocation(MoveToTranslation);
 	}
 }
 
@@ -209,7 +268,6 @@ void APrey::PawnSeen(APawn* SeenPawn)
 	{
 		Hunter = SeenPawn;
 		SetFleetingMode();
-		UE_LOG(LogTemp, Warning, TEXT("ICUY"));
 	}
 }
 

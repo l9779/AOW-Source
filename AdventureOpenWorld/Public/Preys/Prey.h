@@ -10,9 +10,9 @@
 UENUM(BlueprintType)
 enum class EPreyStates : uint8
 {
+	EPS_Dead UMETA(DisplayName = "Dead"),
 	EPS_Roaming UMETA(DisplayName = "Roaming"),
-	EPS_Fleeting UMETA(DisplayName = "Fleeting"),
-	EPS_Dead UMETA(DisplayName = "Dead")
+	EPS_Fleeting UMETA(DisplayName = "Fleeting")
 };
 
 /**
@@ -35,6 +35,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	void PlayAnimMontage(UAnimMontage* AnimMontage, float PlayRate = 1.f) const;
+
 public:
 	virtual void Tick(float DeltaTime) override;
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
@@ -42,12 +44,12 @@ public:
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* Hitter) override; /** <IHitInterface/> */
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void GetNextRoamingLocation();
+	FVector GetRandomMoveToLocation();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI Navigation")
 	TObjectPtr<AActor> RoamingAreaPoint;
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Category = "AI Navigation")
-	FVector PatrolLocation;
+	FVector MoveToTranslation;
 
 private:
 	void InitializeSettings();
@@ -62,24 +64,37 @@ private:
 	void SetDeadMode();
 	void MoveToLocation(const FVector& Location);
 	bool IsInsideRange(FVector& Location, double Radius) const;
-	void PatrolTimerFinished();
-	void SetNextLocation();
+	void MoveToTimerFinished();
+	void ForgetHunter();
+	void RunAwayFromHunter();
+	void RoamingBehavior();
+	void CombatBehavior();
+	FVector GetNextFleetingLocation();
 
 	UFUNCTION()
 	void PawnSeen(APawn* SeenPawn); // Callback for OnPawnSeen in UPawnSensingComponent
 
-	/** Distance that is safe fro prey to stop fleeting and go back to roaming */
+	UPROPERTY()
+	EPreyStates PreyState;
+
+	/** If inside this radius prey must keel fleeting from hunter */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "AI Navigation")
-	float SafeDistanceToHunter;
+	float HunterDangerRadius;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "AI Navigation")
 	float PatrolAreaRadius;
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true), Category = "AI Navigation")
 	float PatrolWaitMin;
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true), Category = "AI Navigation")
 	float PatrolWaitMax;
-	/** Radius used in IsInsideRange */
+
+	/** Radius used in IsInsideRange when roaming */
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true), Category = "AI Navigation")
 	float PatrolAcceptanceRadius;
+	/** Radius used in IsInsideRange when fleeting, 
+	* larger than PatrolAcceptanceRadius for more jitery move.*/
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true), Category = "AI Navigation")
+	float CombatFleetAcceptanceRadius;
+
 	/** Radius of Move to function, should be smaller than PatrolAcceptanceRadius */
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true), Category = "AI Navigation")
 	float MoveToLocationRadius;
@@ -98,8 +113,7 @@ private:
 
 	TObjectPtr<AActor> Hunter;
 
-	UPROPERTY(VisibleInstanceOnly)
-	EPreyStates PreyState;
+
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	TObjectPtr<UParticleSystem> HitParticle; 
@@ -107,9 +121,9 @@ private:
 	TObjectPtr<USoundBase> HitSound;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	TObjectPtr<class UAnimMontage> HitReactMontage;
+	TObjectPtr<UAnimMontage> HitReactMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	TObjectPtr<class UAnimMontage> IdleMontage;
+	TObjectPtr<UAnimMontage> IdleMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	TObjectPtr<class UAnimMontage> DeathMontage;
+	TObjectPtr<UAnimMontage> DeathMontage;
 };
