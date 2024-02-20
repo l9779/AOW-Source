@@ -170,12 +170,6 @@ void APrey::MoveToTimerFinished()
 	MoveToLocation(MoveToTranslation);
 }
 
-void APrey::PlayAnimMontage(UAnimMontage* AnimMontage, float PlayRate) const
-{
-	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
-		AnimInstance->Montage_Play(AnimMontage, PlayRate);
-}
-
 void APrey::SetFleetingMode()
 {
 	PreyState = EPreyStates::EPS_Fleeting;

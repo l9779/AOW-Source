@@ -42,6 +42,14 @@ void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocke
 {
 }
 
+void AWeapon::SetBarVisibility(bool Visibility)
+{
+}
+
+void AWeapon::SetBarPercent(float Percent)
+{
+}
+
 void AWeapon::Unequip()
 {
 	SetOwner(nullptr);

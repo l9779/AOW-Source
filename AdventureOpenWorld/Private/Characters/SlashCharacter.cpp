@@ -10,6 +10,7 @@
 #include "Components/InventoryComponent.h"
 #include "Items/Weapons/Weapon.h"
 #include "Items/Weapons/DistanceWeapon.h"
+#include "Interfaces/CollectableInterface.h"
 #include "Items/Pickups/Soul.h"
 #include "Items/Pickups/Treasure.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -79,12 +80,14 @@ void ASlashCharacter::BeginPlay()
 	Tags.Add(FName("PlayerCharacter"));
 
 	if (Attributes) GetCharacterMovement()->MaxWalkSpeed = Attributes->GetRunSpeed();
+	SetCameraMode(false);
 
 	if (SpawnWithWeapon && SpawnWeaponClass && GetWorld())
 		if (AWeapon* SpawnedWeapon = GetWorld()->SpawnActor<AWeapon>(SpawnWeaponClass, GetActorTransform()))
-			EquipWeapon(SpawnedWeapon);
-
-	SetCameraMode(bAimingBow);
+		{
+			SetOverlappingItem(SpawnedWeapon);
+			EquipWeapon();
+		}
 
 }
 
@@ -92,27 +95,17 @@ void ASlashCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (bHoldingPickup)
+	{
+		PickupFill = FMath::FInterpConstantTo(PickupFill, PickupTime, DeltaTime, 1.f);
+
+		if (PickupFill == PickupTime) EquipWeapon();
+	}
+	
+	UpdateStamina(DeltaTime);
 	if (OrientAttackToRotation) OrientAttackRotation(DeltaTime);
-
-	if (Attributes && Attributes->GetStamina() < Attributes->GetMaxStamina())
-	{
-		Attributes->RegenStamina(DeltaTime);
-		SetHUDStamina();
-	}
-
-	if (EquippedWeapon && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Bow)
-	{
-		ArrowSocketTransform = GetMesh()->GetSocketTransform(FName("RightHandArrowSocket"));
-		BowStringTranslation = GetMesh()->GetSocketLocation(FName("RightHandWeaponSocket"));
-	}
-
-	if (CameraNeedsUpdate())
-	{
-		SpringArm->TargetArmLength =
-			FMath::FInterpTo(SpringArm->TargetArmLength, TargetBoomLength, DeltaTime, CameraZoomSpeed);
-		SpringArm->SocketOffset =
-			FMath::VInterpTo(SpringArm->SocketOffset, TargetBoomOffset, DeltaTime, CameraZoomSpeed);
-	}
+	UpdateBowTransforms();
+	UpdateCamera(DeltaTime);
 
 }
 
@@ -127,6 +120,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(LookAroundAction, ETriggerEvent::Triggered, this, &ASlashCharacter::LookAround);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started , this, &ASlashCharacter::Jump);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &ASlashCharacter::EquipKeyPressed);
+		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::None, this, &ASlashCharacter::EquipKeyReleased);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ASlashCharacter::Attack);
 		EnhancedInputComponent->BindAction(WalkAction, ETriggerEvent::Started, this, &ASlashCharacter::Walk);
 		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::Started, this, &ASlashCharacter::LeftShiftPressed);
@@ -243,12 +237,18 @@ void ASlashCharacter::Walk()
 
 void ASlashCharacter::EquipKeyPressed()
 {
-	if (AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem))
-		EquipWeapon(OverlappingWeapon);
+	if (Cast<ICollectableInterface>(OverlappingItem)) // replace this with  GrabableInterface
+		bHoldingPickup = true;
 	else if (CanDisarm())
 		SheatWeapon();
 	else if (CanArm())
 		UnsheatWeapon();
+}
+
+void ASlashCharacter::EquipKeyReleased()
+{
+	bHoldingPickup = false;
+	PickupFill = 0.f;
 }
 
 void ASlashCharacter::Jump()
@@ -430,19 +430,24 @@ bool ASlashCharacter::CanArm() const
 		EquippedWeapon;
 }
 
-void ASlashCharacter::EquipWeapon(AWeapon* Weapon)
+void ASlashCharacter::EquipWeapon()
 {
-	if (EquippedWeapon) EquippedWeapon->Unequip();
+	EquipKeyReleased();
 
-	FName SocketName("RightHandWeaponSocket");
-	if (Weapon->GetWeaponType() == EWeaponType::EWT_Bow)
+	if (AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem))
+	{
+		if (EquippedWeapon) EquippedWeapon->Unequip();
+
+		FName SocketName("RightHandWeaponSocket");
+		if (OverlappingWeapon->GetWeaponType() == EWeaponType::EWT_Bow)
 		SocketName = FName("LeftHandWeaponSocket");
 
-	Weapon->Equip(GetMesh(), SocketName, this, this);
-	EquippedWeapon = Weapon;
-	OverlappingItem = nullptr;
+		OverlappingWeapon->Equip(GetMesh(), SocketName, this, this);
+		EquippedWeapon = OverlappingWeapon;
+		OverlappingItem = nullptr;
 
-	SetCharacterStateOnWeapon();
+		SetCharacterStateOnWeapon();
+	}
 }
 
 void ASlashCharacter::Die_Implementation()
@@ -513,16 +518,45 @@ void ASlashCharacter::ANCB_SetPotionVisibility(bool Visiblity)
 	if (!Visiblity) ActionState = EActionState::EAS_Unoccupied;
 }
 
-void ASlashCharacter::ANCB_ReleaseBowString()
+void ASlashCharacter::ANCB_ReleaseBowString() const
 {
 	if (ADistanceWeapon* BowWeapon = Cast<ADistanceWeapon>(EquippedWeapon))
 		BowWeapon->StringPulled(false);
 }
 
-void ASlashCharacter::ANCB_GrabBowString()
+void ASlashCharacter::ANCB_GrabBowString() const
 {
 	if (ADistanceWeapon* BowWeapon = Cast<ADistanceWeapon>(EquippedWeapon))
 		BowWeapon->StringPulled(true);
+}
+
+void ASlashCharacter::UpdateStamina(float DeltaTime)
+{
+	if (Attributes && Attributes->NeedsToRecoverStamina())
+	{
+		Attributes->RegenStamina(DeltaTime);
+		SetHUDStamina();
+	}
+}
+
+void ASlashCharacter::UpdateBowTransforms()
+{
+	if (EquippedWeapon && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Bow)
+	{
+		ArrowSocketTransform = GetMesh()->GetSocketTransform(FName("RightHandArrowSocket"));
+		BowStringTranslation = GetMesh()->GetSocketLocation(FName("RightHandWeaponSocket"));
+	}
+}
+
+void ASlashCharacter::UpdateCamera(float DeltaTime)
+{
+	if (CameraNeedsUpdate())
+	{
+		SpringArm->TargetArmLength =
+			FMath::FInterpTo(SpringArm->TargetArmLength, TargetBoomLength, DeltaTime, CameraZoomSpeed);
+		SpringArm->SocketOffset =
+			FMath::VInterpTo(SpringArm->SocketOffset, TargetBoomOffset, DeltaTime, CameraZoomSpeed);
+	}
 }
 
 bool ASlashCharacter::IsUnoccupied() const
@@ -607,7 +641,9 @@ void ASlashCharacter::SetCameraMode(bool AimingMode)
 
 bool ASlashCharacter::CameraNeedsUpdate() const
 {
-	return SpringArm->TargetArmLength != TargetBoomLength || SpringArm->TargetOffset != TargetBoomOffset;
+	return 
+		SpringArm->TargetArmLength != TargetBoomLength ||
+		SpringArm->TargetOffset != TargetBoomOffset;
 }
 
 void ASlashCharacter::SetHUDPotionCount()

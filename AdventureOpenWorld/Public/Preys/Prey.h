@@ -51,7 +51,6 @@ private:
 	void PlayHitSound(const FVector& ImpactLocation);
 	void SpawnHitParticle(const FVector& ImpactLocation);
 	void MoveToTimerFinished();
-	void PlayAnimMontage(UAnimMontage* AnimMontage, float PlayRate = 1.f) const;
 
 	/* Change Behavior */
 	void SetFleetingMode();

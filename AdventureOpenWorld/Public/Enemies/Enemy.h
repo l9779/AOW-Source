@@ -79,15 +79,15 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	TSubclassOf<class AWeapon> WeaponClass;
 
+	UPROPERTY()
+	TObjectPtr<class AAIController> EnemyController;
+
 	/** Will chase CombatTarget inside this radius */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	double CombatRadius;
 	/** Radius to start attack */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	double AttackRadius;
-
-	UPROPERTY()
-	TObjectPtr<class AAIController> EnemyController;
 
 	/** Navigation */
 	UPROPERTY(EditInstanceOnly, Category = "AI Navigation")

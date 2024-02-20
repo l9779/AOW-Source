@@ -48,6 +48,7 @@ protected:
 	void LookAround(const FInputActionValue& Value);
 	void Walk();
 	void EquipKeyPressed();
+	void EquipKeyReleased();
 	virtual void Jump() override; /** <ACharacter/> */
 	virtual void Attack() override; /** <ABaseCharacter/> */
 	void LeftShiftPressed();
@@ -67,7 +68,7 @@ protected:
 	void SheatWeapon();
 	bool CanDisarm() const;
 	bool CanArm() const;
-	void EquipWeapon(AWeapon* Weapon);
+	void EquipWeapon();
 	bool HasEnoughStamina(float StaminaCost = 0.f) const;
 	bool IsOccupied() const;
 
@@ -87,9 +88,9 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void ANCB_SetPotionVisibility(bool Visiblity);
 	UFUNCTION(BlueprintCallable)
-	void ANCB_ReleaseBowString();
+	void ANCB_ReleaseBowString() const;
 	UFUNCTION(BlueprintCallable)
-	void ANCB_GrabBowString();
+	void ANCB_GrabBowString() const;
 
 	/** Input Actions */
 	UPROPERTY(EditAnywhere, Category = "Input|Mapping Context")
@@ -141,7 +142,10 @@ protected:
 	TSubclassOf<AWeapon> SpawnWeaponClass;
 
 	/* End of Protected */
-private:		
+private:
+	void UpdateStamina(float DeltaTime);
+	void UpdateBowTransforms();
+	void UpdateCamera(float DeltaTime);
 	bool IsUnoccupied() const;
 	void SetCharacterStateOnWeapon();
 	void InitializeSlashOverlay(APlayerController* PlayerController);
@@ -156,7 +160,7 @@ private:
 	/** Character Components */
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USpringArmComponent> SpringArm;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UCameraComponent> ViewCamera;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -179,7 +183,14 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "States", meta = (AllowPrivateAccess = "true"))
 	EActionState ActionState; 
 	
-	UPROPERTY(VisibleInstanceOnly)
+	/** Pickup Item Variables */
+	float PickupFill = 0.f;
+	/** Time necessary to hold pickup key for item*/
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
+	float PickupTime = 1.5f;
+	/** if true increases PickupFill */
+	bool bHoldingPickup;
+	UPROPERTY(VisibleInstanceOnly, Category = "Inventory")
 	TObjectPtr<AItem> OverlappingItem;
 
 	TObjectPtr<class USlashOverlay> SlashOverlay;

@@ -50,6 +50,11 @@ bool UAttributeComponent::IsHurt() const
 	return Health < MaxHealth;
 }
 
+bool UAttributeComponent::NeedsToRecoverStamina() const
+{
+	return Stamina < MaxStamina;
+}
+
 void UAttributeComponent::AddGold(int32 AmmountToAdd)
 {
 	Gold += AmmountToAdd;

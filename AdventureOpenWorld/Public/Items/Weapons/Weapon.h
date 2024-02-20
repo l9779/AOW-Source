@@ -3,10 +3,11 @@
 #include "CoreMinimal.h"
 #include "Items/Item.h"
 #include "Items/Weapons/WeaponTypes.h"
+#include "Interfaces/CollectableInterface.h"
 #include "Weapon.generated.h"
 
 UCLASS()
-class ADVENTUREOPENWORLD_API AWeapon : public AItem
+class ADVENTUREOPENWORLD_API AWeapon : public AItem, public ICollectableInterface
 {
 	GENERATED_BODY()
 
@@ -16,6 +17,11 @@ public:
 	void Equip(USceneComponent* InParent, FName InSocketName, AActor* NewOwner, APawn* NewInstigator, bool bPlaySound = true);
 	virtual void Unequip();
 	virtual void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName);
+
+	/*  <ICollectableInterface> */
+	virtual void SetBarVisibility(bool Visibility) override;
+	virtual void SetBarPercent(float Percent) override;
+	/* /<ICollectableInterface> */
 
 protected:
 	//UFUNCTION(BlueprintImplementableEvent)

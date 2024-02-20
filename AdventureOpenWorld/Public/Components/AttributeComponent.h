@@ -53,6 +53,7 @@ public:
 	float GetStaminaPercent();
 	bool IsAlive() const;
 	bool IsHurt() const;
+	bool NeedsToRecoverStamina() const;
 	void AddGold(int32 AmmountToAdd);
 	void AddSouls(int32 AmmountToAdd);
 
@@ -61,6 +62,5 @@ public:
 	FORCEINLINE int32 GetGold() const { return Gold; }
 	FORCEINLINE int32 GetSouls() const { return Souls; }
 	FORCEINLINE float GetStamina() const { return Stamina; }
-	FORCEINLINE float GetMaxStamina() const { return MaxStamina; }
 	FORCEINLINE float GetStaminaDodgeCost() const { return StaminaDodgeCost; }
 };
