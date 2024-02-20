@@ -41,6 +41,7 @@ void ABaseCharacter::Attack()
 void ABaseCharacter::Die_Implementation()
 {
 	Tags.Add(FName("Dead"));
+	
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	PlayDeathMontage();
 }
@@ -164,7 +165,7 @@ void ABaseCharacter::StopAttackMontage()
 	}
 }
 
-/* < Called on BP_Enemy Tick > */
+/* < Called on BaseCharacters BP childrens Tick > */
 FVector ABaseCharacter::GetTranslationWarpTarget()
 {
 	if (!CombatTarget) return FVector();
@@ -184,7 +185,7 @@ FVector ABaseCharacter::GetRotationWarpTarget()
 
 	return FVector();
 }
-/* < /Called on BP_Enemy Tick > */
+/* < / Called on BaseCharacters BP childrens Tick  > */
 
 bool ABaseCharacter::CanAttack() const
 {

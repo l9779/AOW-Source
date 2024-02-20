@@ -96,9 +96,11 @@ void AEnemy::Die_Implementation()
 {
 	Super::Die_Implementation();
 
+
 	if (CombatTarget->ActorHasTag(FName("PlayerCharacter")))
 		Cast<ABaseCharacter>(CombatTarget)->SetCombatTarget(nullptr);
 
+	DetachFromControllerPendingDestroy();
 	EnemyState = EEnemyState::EES_Dead;
 	ClearAttackTimer();
 	HideHealthBar();

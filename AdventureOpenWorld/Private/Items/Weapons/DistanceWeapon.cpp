@@ -61,6 +61,7 @@ void ADistanceWeapon::SpawnArrow(FTransform SpawnTransform)
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Instigator = GetInstigator();
 		SpawnParams.Owner = this;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 		if (AProjectile* Arrow = GetWorld()->SpawnActor<AProjectile>(ArrowClass, SpawnTransform, SpawnParams))
 			Arrow->SetDamage(Damage);
