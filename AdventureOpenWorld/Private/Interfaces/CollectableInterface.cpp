@@ -5,10 +5,14 @@
 
 // Add default functionality here for any ICollectableInterface functions that are not pure virtual.
 
+void ICollectableInterface::SetIsBeignPickedUp(bool PickedUp)
+{
+}
+
 void ICollectableInterface::SetBarVisibility(bool Visibility)
 {
 }
 
-void ICollectableInterface::SetBarPercent(float Percent)
+void ICollectableInterface::SetBarPercent(const float& Percent)
 {
 }

@@ -68,7 +68,7 @@ protected:
 	void SheatWeapon();
 	bool CanDisarm() const;
 	bool CanArm() const;
-	void EquipWeapon();
+	void EquipWeapon(AWeapon* WeaponToEquip);
 	bool HasEnoughStamina(float StaminaCost = 0.f) const;
 	bool IsOccupied() const;
 
@@ -106,7 +106,7 @@ protected:
 	TObjectPtr<UInputAction> JumpAction;
 
 	UPROPERTY(EditAnywhere, Category = "Input|Actions")
-	TObjectPtr<UInputAction> EquipAction;
+	TObjectPtr<UInputAction> InteractAction;
 	UPROPERTY(EditAnywhere, Category = "Input|Actions")
 	TObjectPtr<UInputAction> DrinkPotionAction;
 	UPROPERTY(EditAnywhere, Category = "Input|Actions")
@@ -140,6 +140,8 @@ protected:
 	bool SpawnWithWeapon = false; 
 	UPROPERTY(EditAnywhere, Category = "Inventory")
 	TSubclassOf<AWeapon> SpawnWeaponClass;
+
+	
 
 	/* End of Protected */
 private:
@@ -182,16 +184,12 @@ private:
 	/** Set by different action character can peform(equipping weapon, attacks, unnocupied) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "States", meta = (AllowPrivateAccess = "true"))
 	EActionState ActionState; 
-	
-	/** Pickup Item Variables */
-	float PickupFill = 0.f;
-	/** Time necessary to hold pickup key for item*/
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
-	float PickupTime = 1.5f;
-	/** if true increases PickupFill */
-	bool bHoldingPickup;
+
 	UPROPERTY(VisibleInstanceOnly, Category = "Inventory")
 	TObjectPtr<AItem> OverlappingItem;
+
+	/** True when holding interact */
+	bool bHoldingPickup = false;
 
 	TObjectPtr<class USlashOverlay> SlashOverlay;
 

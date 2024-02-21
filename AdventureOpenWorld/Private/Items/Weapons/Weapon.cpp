@@ -2,11 +2,30 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/SphereComponent.h"
 #include "NiagaraComponent.h"
+#include "HUD/RadialBarComponent.h"
 
 AWeapon::AWeapon(): 
 	Damage(20.f), StaminaAttackCost(25.f),
 	WeaponType(EWeaponType::EWT_Default)
 {
+	PrimaryActorTick.bCanEverTick = true;
+
+	RadialBarComponentComponent = CreateDefaultSubobject<URadialBarComponent>(TEXT("Radial Bar"));
+	RadialBarComponentComponent->SetupAttachment(GetRootComponent());
+	RadialBarComponentComponent->SetVisibility(false);
+	RadialBarComponentComponent->SetDrawSize(FVector2D(50.f, 50.f));
+}
+
+void AWeapon::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bIsBeignPickedUp)
+	{
+		PickupFill = FMath::FInterpConstantTo(PickupFill, PickupTime, DeltaTime, 1.f);
+		SetBarPercent(PickupFill / PickupTime);
+		if (PickupFill == PickupTime) bCanBePickepUp = true;
+	}
 
 }
 
@@ -40,14 +59,23 @@ void AWeapon::PlayEquipSound()
 
 void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName)
 {
+	// Works different on MeeleeWeapon and DistanceWeapon
 }
 
-void AWeapon::SetBarVisibility(bool Visibility)
+void AWeapon::SetIsBeignPickedUp(bool PickedUp)
 {
+	bIsBeignPickedUp = PickedUp;
+	if (RadialBarComponentComponent) RadialBarComponentComponent->SetVisibility(PickedUp);
+	
+	bCanBePickepUp = false;
+
+	if (!PickedUp) PickupFill = 0.f;
+	
 }
 
-void AWeapon::SetBarPercent(float Percent)
+void AWeapon::SetBarPercent(const float& Percent)
 {
+	if (RadialBarComponentComponent) RadialBarComponentComponent->SetBarPercent(Percent);
 }
 
 void AWeapon::Unequip()
@@ -56,6 +84,7 @@ void AWeapon::Unequip()
 	SetInstigator(nullptr);
 
 	ItemState = EItemState::EIS_Hovering;
+	SetActorRotation(FRotator::ZeroRotator);
 
 	if (Sphere) Sphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }

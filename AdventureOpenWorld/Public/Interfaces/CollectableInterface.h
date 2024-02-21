@@ -21,7 +21,9 @@ class ADVENTUREOPENWORLD_API ICollectableInterface
 	GENERATED_BODY()
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
+
 public:
+	virtual void SetIsBeignPickedUp(bool PickedUp);
 	virtual void SetBarVisibility(bool Visibility);
-	virtual void SetBarPercent(float Percent);
+	virtual void SetBarPercent(const float& Percent);
 };

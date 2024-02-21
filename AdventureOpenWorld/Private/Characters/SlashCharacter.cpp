@@ -84,10 +84,7 @@ void ASlashCharacter::BeginPlay()
 
 	if (SpawnWithWeapon && SpawnWeaponClass && GetWorld())
 		if (AWeapon* SpawnedWeapon = GetWorld()->SpawnActor<AWeapon>(SpawnWeaponClass, GetActorTransform()))
-		{
-			SetOverlappingItem(SpawnedWeapon);
-			EquipWeapon();
-		}
+			EquipWeapon(SpawnedWeapon);
 
 }
 
@@ -95,18 +92,14 @@ void ASlashCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (bHoldingPickup)
-	{
-		PickupFill = FMath::FInterpConstantTo(PickupFill, PickupTime, DeltaTime, 1.f);
-
-		if (PickupFill == PickupTime) EquipWeapon();
-	}
-	
 	UpdateStamina(DeltaTime);
 	if (OrientAttackToRotation) OrientAttackRotation(DeltaTime);
 	UpdateBowTransforms();
 	UpdateCamera(DeltaTime);
 
+	if (bHoldingPickup && OverlappingItem)
+		if (AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem))
+			if (OverlappingWeapon->CanBeEquipped()) EquipWeapon(OverlappingWeapon);
 }
 
 void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -116,19 +109,19 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Movement);
-		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::None , this, &ASlashCharacter::ClearMovement);
+		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Completed, this, &ASlashCharacter::ClearMovement);
 		EnhancedInputComponent->BindAction(LookAroundAction, ETriggerEvent::Triggered, this, &ASlashCharacter::LookAround);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started , this, &ASlashCharacter::Jump);
-		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &ASlashCharacter::EquipKeyPressed);
-		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::None, this, &ASlashCharacter::EquipKeyReleased);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ASlashCharacter::EquipKeyPressed);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Completed, this, &ASlashCharacter::EquipKeyReleased);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ASlashCharacter::Attack);
 		EnhancedInputComponent->BindAction(WalkAction, ETriggerEvent::Started, this, &ASlashCharacter::Walk);
 		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::Started, this, &ASlashCharacter::LeftShiftPressed);
-		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::None, this, &ASlashCharacter::LeftShiftReleased);
+		EnhancedInputComponent->BindAction(HeavyAttackAction, ETriggerEvent::Completed, this, &ASlashCharacter::LeftShiftReleased);
 		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Started, this, &ASlashCharacter::Dodge);
 		EnhancedInputComponent->BindAction(DrinkPotionAction, ETriggerEvent::Started, this, &ASlashCharacter::DrinkPotion);
 		EnhancedInputComponent->BindAction(RightMouseAction, ETriggerEvent::Started, this, &ASlashCharacter::RightMousePressed);
-		EnhancedInputComponent->BindAction(RightMouseAction, ETriggerEvent::None, this, &ASlashCharacter::RightMouseReleased);
+		EnhancedInputComponent->BindAction(RightMouseAction, ETriggerEvent::Completed, this, &ASlashCharacter::RightMouseReleased);
 	}
 }
 
@@ -237,18 +230,27 @@ void ASlashCharacter::Walk()
 
 void ASlashCharacter::EquipKeyPressed()
 {
-	if (Cast<ICollectableInterface>(OverlappingItem)) // replace this with  GrabableInterface
+	if (ICollectableInterface* CollectableInterface = Cast<ICollectableInterface>(OverlappingItem)) // replace this with  GrabableInterface
+	{
+		CollectableInterface->SetIsBeignPickedUp(true);
+		CollectableInterface->SetBarVisibility(true);
 		bHoldingPickup = true;
+	}	
+	/*
 	else if (CanDisarm())
 		SheatWeapon();
 	else if (CanArm())
 		UnsheatWeapon();
+	*/
 }
 
 void ASlashCharacter::EquipKeyReleased()
 {
 	bHoldingPickup = false;
-	PickupFill = 0.f;
+
+	if (OverlappingItem)
+		if (ICollectableInterface* CollectableInterface = Cast<ICollectableInterface>(OverlappingItem))
+			CollectableInterface->SetIsBeignPickedUp(false);
 }
 
 void ASlashCharacter::Jump()
@@ -430,24 +432,20 @@ bool ASlashCharacter::CanArm() const
 		EquippedWeapon;
 }
 
-void ASlashCharacter::EquipWeapon()
+void ASlashCharacter::EquipWeapon(AWeapon* WeaponToEquip)
 {
-	EquipKeyReleased();
+	if (EquippedWeapon) EquippedWeapon->Unequip();
 
-	if (AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem))
-	{
-		if (EquippedWeapon) EquippedWeapon->Unequip();
+	FName SocketName("RightHandWeaponSocket");
+	if (WeaponToEquip->GetWeaponType() == EWeaponType::EWT_Bow)
+	SocketName = FName("LeftHandWeaponSocket");
 
-		FName SocketName("RightHandWeaponSocket");
-		if (OverlappingWeapon->GetWeaponType() == EWeaponType::EWT_Bow)
-		SocketName = FName("LeftHandWeaponSocket");
+	WeaponToEquip->SetIsBeignPickedUp(false);
+	WeaponToEquip->Equip(GetMesh(), SocketName, this, this);
+	EquippedWeapon = WeaponToEquip;
+	OverlappingItem = nullptr;
 
-		OverlappingWeapon->Equip(GetMesh(), SocketName, this, this);
-		EquippedWeapon = OverlappingWeapon;
-		OverlappingItem = nullptr;
-
-		SetCharacterStateOnWeapon();
-	}
+	SetCharacterStateOnWeapon();
 }
 
 void ASlashCharacter::Die_Implementation()
