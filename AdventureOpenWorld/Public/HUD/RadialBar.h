@@ -15,9 +15,6 @@ class ADVENTUREOPENWORLD_API URadialBar : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintImplementableEvent)
-	void SetBarPercent(const float& Percent);
-
-	//UPROPERTY(meta = (BindWidget))
-	//TObjectPtr<class UImage> BarImage;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UImage> BarImage;
 };

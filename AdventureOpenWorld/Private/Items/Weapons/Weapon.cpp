@@ -13,7 +13,7 @@ AWeapon::AWeapon():
 	RadialBarComponentComponent = CreateDefaultSubobject<URadialBarComponent>(TEXT("Radial Bar"));
 	RadialBarComponentComponent->SetupAttachment(GetRootComponent());
 	RadialBarComponentComponent->SetVisibility(false);
-	RadialBarComponentComponent->SetDrawSize(FVector2D(50.f, 50.f));
+	RadialBarComponentComponent->SetDrawSize(FVector2D(80.f, 80.f));
 }
 
 void AWeapon::Tick(float DeltaTime)
@@ -27,6 +27,8 @@ void AWeapon::Tick(float DeltaTime)
 		if (PickupFill == PickupTime) bCanBePickepUp = true;
 	}
 
+	if (GetActorLocation().Z > DesiredZ)
+		AddActorWorldOffset(FVector(0.f, 0.f, 1.f * DeltaTime));
 }
 
 void AWeapon::Equip(USceneComponent* InParent, FName InSocketName, AActor* NewOwner, APawn* NewInstigator, bool bPlaySound)
@@ -85,6 +87,7 @@ void AWeapon::Unequip()
 
 	ItemState = EItemState::EIS_Hovering;
 	SetActorRotation(FRotator::ZeroRotator);
+	DesiredZ = GetDesiredZ();
 
 	if (Sphere) Sphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }

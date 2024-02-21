@@ -30,6 +30,32 @@ void AItem::BeginPlay()
 	Sphere->OnComponentEndOverlap.AddDynamic(this, &AItem::OnSphereEndOverlap);
 }
 
+float AItem::GetDesiredZ() const
+{
+	const FVector Start = GetActorLocation();
+	const FVector End = Start - FVector(0.f, 0.f, 2000.f);
+
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	ObjectTypes.Add(EObjectTypeQuery::ObjectTypeQuery1);
+
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(GetOwner());
+
+	FHitResult OutHitResult;
+
+	UKismetSystemLibrary::LineTraceSingleForObjects(
+		this,
+		Start, End,
+		ObjectTypes,
+		false,
+		ActorsToIgnore,
+		EDrawDebugTrace::None,
+		OutHitResult,
+		true);
+
+	return OutHitResult.ImpactPoint.Z + 100.f;
+}
+
 float AItem::TransformedSin()
 {
 	return Amplitude * FMath::Sin(RunningTime * TimeConstant);

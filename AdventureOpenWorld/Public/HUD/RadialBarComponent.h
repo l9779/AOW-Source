@@ -19,4 +19,9 @@ public:
 private:
 	UPROPERTY()
 	TObjectPtr<class URadialBar> RadialBarWidget;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Materials")
+	TObjectPtr<UMaterialInstance> RadialBarMaterialInstance;
+
+	TObjectPtr<UMaterialInstanceDynamic> DynamicRadialBarMaterialInstance;
 };

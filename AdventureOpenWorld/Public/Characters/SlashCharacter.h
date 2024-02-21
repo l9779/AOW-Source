@@ -41,13 +41,14 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	void InitializeCharacterProperties();
 
 	/** Input callbacks */
 	void Movement(const FInputActionValue& Value);
 	void ClearMovement(const FInputActionValue& Value);
 	void LookAround(const FInputActionValue& Value);
 	void Walk();
-	void EquipKeyPressed();
+	void InteractKeyPressed();
 	void EquipKeyReleased();
 	virtual void Jump() override; /** <ACharacter/> */
 	virtual void Attack() override; /** <ABaseCharacter/> */
@@ -57,6 +58,7 @@ protected:
 	void DrinkPotion();
 	void RightMousePressed();
 	void RightMouseReleased();
+	void ArmOnDisarm();
 
 	/** Weapon and Combat Functions */
 	/** <ABaseCharacter> */
@@ -108,6 +110,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input|Actions")
 	TObjectPtr<UInputAction> InteractAction;
 	UPROPERTY(EditAnywhere, Category = "Input|Actions")
+	TObjectPtr<UInputAction> ArmOrDisarmAction;
+	UPROPERTY(EditAnywhere, Category = "Input|Actions")
 	TObjectPtr<UInputAction> DrinkPotionAction;
 	UPROPERTY(EditAnywhere, Category = "Input|Actions")
 	TObjectPtr<UInputAction> DodgeAction;
@@ -141,13 +145,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Inventory")
 	TSubclassOf<AWeapon> SpawnWeaponClass;
 
-	
-
 	/* End of Protected */
 private:
 	void UpdateStamina(float DeltaTime);
 	void UpdateBowTransforms();
 	void UpdateCamera(float DeltaTime);
+	void CheckForInteractable();
 	bool IsUnoccupied() const;
 	void SetCharacterStateOnWeapon();
 	void InitializeSlashOverlay(APlayerController* PlayerController);

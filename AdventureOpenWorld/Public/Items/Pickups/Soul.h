@@ -24,8 +24,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Soul Properties")
 	int32 Souls;
 
-	double DesiredZ;
-
 	UPROPERTY(EditAnywhere, Category = "Soul Properties")
 	float DriftRate = -15.f;
 
