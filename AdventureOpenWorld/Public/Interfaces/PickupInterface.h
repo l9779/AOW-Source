@@ -19,6 +19,7 @@ class ADVENTUREOPENWORLD_API IPickupInterface
 
 public:
 	virtual void SetOverlappingItem(class AItem* Item);
+	virtual void SetOverlappingLootable(class ALootableSupplies* Lootable);
 	virtual void AddSouls(class ASoul* Soul);
 	virtual void AddGold(class ATreasure* Gold);
 	virtual bool CollectHealthPotion();

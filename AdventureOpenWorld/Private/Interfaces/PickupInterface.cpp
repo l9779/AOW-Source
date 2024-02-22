@@ -7,6 +7,10 @@ void IPickupInterface::SetOverlappingItem(AItem* Item)
 {
 }
 
+void IPickupInterface::SetOverlappingLootable(ALootableSupplies* Lootable)
+{
+}
+
 void IPickupInterface::AddSouls(ASoul* Soul)
 {
 }

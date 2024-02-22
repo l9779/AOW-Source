@@ -10,24 +10,27 @@ AWeapon::AWeapon():
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	RadialBarComponentComponent = CreateDefaultSubobject<URadialBarComponent>(TEXT("Radial Bar"));
-	RadialBarComponentComponent->SetupAttachment(GetRootComponent());
-	RadialBarComponentComponent->SetVisibility(false);
-	RadialBarComponentComponent->SetDrawSize(FVector2D(80.f, 80.f));
+	RadialBarComponent = CreateDefaultSubobject<URadialBarComponent>(TEXT("Radial Bar"));
+	RadialBarComponent->SetupAttachment(GetRootComponent());
+	RadialBarComponent->SetVisibility(false);
+	RadialBarComponent->SetDrawSize(FVector2D(80.f, 80.f));
+}
+
+void AWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+
+	InteractionTime = WeaponPickupTime;
+
 }
 
 void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (bIsBeignPickedUp)
-	{
-		PickupFill = FMath::FInterpConstantTo(PickupFill, PickupTime, DeltaTime, 1.f);
-		SetBarPercent(PickupFill / PickupTime);
-		if (PickupFill == PickupTime) bCanBePickepUp = true;
-	}
+	if (bIsBeignActivated) SetBarPercent(InteractionFill / InteractionTime, DeltaTime);
 
-	if (GetActorLocation().Z > DesiredZ)
+	if (GetActorLocation().Z > DesiredZ) 
 		AddActorWorldOffset(FVector(0.f, 0.f, 1.f * DeltaTime));
 }
 
@@ -64,20 +67,18 @@ void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocke
 	// Works different on MeeleeWeapon and DistanceWeapon
 }
 
-void AWeapon::SetIsBeignPickedUp(bool PickedUp)
+void AWeapon::SetIsBeignActivated(bool IsInteracting)
 {
-	bIsBeignPickedUp = PickedUp;
-	if (RadialBarComponentComponent) RadialBarComponentComponent->SetVisibility(PickedUp);
-	
-	bCanBePickepUp = false;
+	IInteractableInterface::SetIsBeignActivated(IsInteracting);
 
-	if (!PickedUp) PickupFill = 0.f;
-	
+	if (RadialBarComponent) RadialBarComponent->SetVisibility(IsInteracting);
 }
 
-void AWeapon::SetBarPercent(const float& Percent)
+void AWeapon::SetBarPercent(const float& Percent, float DeltaTime)
 {
-	if (RadialBarComponentComponent) RadialBarComponentComponent->SetBarPercent(Percent);
+	IInteractableInterface::SetBarPercent(Percent, DeltaTime);
+
+	if (RadialBarComponent) RadialBarComponent->SetBarPercent(Percent);
 }
 
 void AWeapon::Unequip()

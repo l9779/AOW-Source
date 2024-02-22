@@ -21,8 +21,19 @@ class ADVENTUREOPENWORLD_API IInteractableInterface
 	GENERATED_BODY()
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
+protected:
+	/** Pickup Item Variables */
+	bool bIsBeignActivated = false;
+	bool bInteractionConcluded = false;
+
+	float InteractionFill = 0.f;
+	/** Time necessary to hold pickup key for item*/
+	float InteractionTime = 1.5f;
+
 public:
-	virtual void SetIsBeignPickedUp(bool PickedUp);
-	virtual void SetBarVisibility(bool Visibility);
-	virtual void SetBarPercent(const float& Percent);
+	virtual void SetIsBeignActivated(bool IsInteracting);
+	virtual void SetBarPercent(const float& Percent, float DeltaTime);
+	virtual void OnInteractionConcluded();
+
+	FORCEINLINE bool GetInteractionConcluded() const { return bInteractionConcluded; }
 };

@@ -49,7 +49,7 @@ protected:
 	void LookAround(const FInputActionValue& Value);
 	void Walk();
 	void InteractKeyPressed();
-	void EquipKeyReleased();
+	void InteractKeyReleased();
 	virtual void Jump() override; /** <ACharacter/> */
 	virtual void Attack() override; /** <ABaseCharacter/> */
 	void LeftShiftPressed();
@@ -176,8 +176,10 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Hair Groom")
 	TObjectPtr<UGroomComponent> EyebrownHair;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UPROPERTY(EditDefaultsOnly, Category = "Montages|Actions")
 	TObjectPtr<UAnimMontage> EquipMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages|Actions")
+	TObjectPtr<UAnimMontage> GrabItemMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages|Attack")
 	TObjectPtr<UAnimMontage> FireBowMontage;
 

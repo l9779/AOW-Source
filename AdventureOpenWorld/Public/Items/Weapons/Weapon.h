@@ -21,11 +21,13 @@ public:
 	virtual void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName);
 
 	/*  <IInteractableInterface> */
-	virtual void SetIsBeignPickedUp(bool PickedUp) override;
-	virtual void SetBarPercent(const float& Percent) override;
+	virtual void SetIsBeignActivated(bool IsInteracting) override;
+	virtual void SetBarPercent(const float& Percent, float DeltaTime) override;
 	/* /<IInteractableInterface> */
 
 protected:
+	virtual void BeginPlay() override;
+
 	//UFUNCTION(BlueprintImplementableEvent)
 	//void CreateFields(const FVector& FieldLocation);  transfered to breakable actor
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
@@ -44,20 +46,13 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	TObjectPtr<USoundBase> EquipSound;
 
-	UPROPERTY(VisibleAnywhere, Category = "Radial Bar")
-	TObjectPtr<class URadialBarComponent> RadialBarComponentComponent;
-	
-	/** Pickup Item Variables */
-	bool bIsBeignPickedUp = false;
-	bool bCanBePickepUp = false;
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<class URadialBarComponent> RadialBarComponent;
 
-	float PickupFill = 0.f;
-	/** Time necessary to hold pickup key for item*/
-	UPROPERTY(EditDefaultsOnly, Category = "Collectable Properties")
-	float PickupTime = 1.5f;
+	UPROPERTY(EditDefaultsOnly, Category = "Interactable Properties")
+	float WeaponPickupTime = 1.5f;
 
 public:
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	FORCEINLINE float GetStaminaAttackCost() const { return StaminaAttackCost; }
-	FORCEINLINE bool CanBeEquipped() const { return bCanBePickepUp; }
 };
